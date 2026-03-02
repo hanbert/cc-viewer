@@ -1,6 +1,6 @@
 import React from 'react';
-import { Space, Tag, Button, Badge, Typography, Dropdown, Popover, Modal, Collapse, Drawer, Switch, Tabs, Spin, Tooltip } from 'antd';
-import { MessageOutlined, FileTextOutlined, ImportOutlined, DownOutlined, DashboardOutlined, ExportOutlined, DownloadOutlined, SettingOutlined, BarChartOutlined, CodeOutlined } from '@ant-design/icons';
+import { Space, Tag, Button, Badge, Typography, Dropdown, Popover, Modal, Collapse, Drawer, Switch, Tabs, Spin, Tooltip, Input, message } from 'antd';
+import { MessageOutlined, FileTextOutlined, ImportOutlined, DownOutlined, DashboardOutlined, ExportOutlined, DownloadOutlined, SettingOutlined, BarChartOutlined, CodeOutlined, GlobalOutlined, CopyOutlined } from '@ant-design/icons';
 import { QRCodeCanvas } from 'qrcode.react';
 import { formatTokenCount, computeTokenStats, computeCacheRebuildStats, computeToolUsageStats, computeSkillUsageStats } from '../utils/helpers';
 import { isSystemText, classifyUserContent, isMainAgent } from '../utils/contentFilter';
@@ -659,12 +659,22 @@ class AppHeader extends React.Component {
         label: t('ui.globalSettings'),
         onClick: () => this.setState({ globalSettingsVisible: true }),
       },
+      {
+        key: 'language',
+        icon: <GlobalOutlined />,
+        label: t('ui.languageSettings'),
+        children: LANG_OPTIONS.map(o => ({
+          key: 'lang-' + o.value,
+          label: o.label,
+          style: o.value === getLang() ? { color: '#3b82f6' } : {},
+        })),
+      },
     ];
 
     return (
       <div className={styles.headerBar}>
         <Space size="middle">
-          <Dropdown menu={{ items: menuItems }} trigger={['hover']}>
+          <Dropdown menu={{ items: menuItems, onClick: ({ key }) => { if (key.startsWith('lang-')) { const lang = key.slice(5); setLang(lang); if (onLangChange) onLangChange(); } } }} trigger={['hover']}>
             <Text strong className={styles.titleText}>
               <img src="/favicon.ico" alt="Logo" className={styles.logoImage} />
               CC-Viewer <DownOutlined className={styles.titleArrow} />
@@ -756,26 +766,13 @@ class AppHeader extends React.Component {
             </Tag>
           )}
           {viewMode === 'chat' && (
-            <span className={styles.settingsBtn} onClick={() => this.setState({ settingsDrawerVisible: true })}>
-              <SettingOutlined /> {t('ui.settings')}
-            </span>
+            <Button
+              icon={<SettingOutlined />}
+              onClick={() => this.setState({ settingsDrawerVisible: true })}
+            >
+              {t('ui.settings')}
+            </Button>
           )}
-          <Dropdown
-            trigger={['hover']}
-            placement="bottom"
-            menu={{
-              items: LANG_OPTIONS.map(o => ({
-                key: o.value,
-                label: o.label,
-                style: o.value === getLang() ? { color: '#3b82f6' } : {},
-              })),
-              onClick: ({ key }) => { setLang(key); if (onLangChange) onLangChange(); },
-            }}
-          >
-            <span className={styles.langSelector}>
-              {LANG_OPTIONS.find(o => o.value === getLang())?.label || '简体中文'}
-            </span>
-          </Dropdown>
           {cliMode && viewMode === 'chat' && (
             <Button
               type={terminalVisible ? 'primary' : 'default'}
@@ -846,29 +843,47 @@ class AppHeader extends React.Component {
         <Drawer
           title={t('ui.settings')}
           placement="right"
-          width={320}
+          width={360}
           open={this.state.settingsDrawerVisible}
           onClose={() => this.setState({ settingsDrawerVisible: false })}
         >
-          {this.state.localUrl && (
+          {cliMode && this.state.localUrl && (
             <div className={styles.qrcodeSection}>
+              <div className={styles.qrcodeTitle}>{t('ui.scanToCoding')}</div>
               <QRCodeCanvas value={this.state.localUrl} size={160} bgColor="#141414" fgColor="#d9d9d9" level="M" />
-              <div className={styles.qrcodeUrl}>{this.state.localUrl}</div>
+              <Input
+                readOnly
+                value={this.state.localUrl}
+                className={styles.qrcodeUrlInput}
+                suffix={
+                  <CopyOutlined
+                    className={styles.qrcodeUrlCopy}
+                    onClick={() => {
+                      navigator.clipboard.writeText(this.state.localUrl).then(() => {
+                        message.success(t('ui.copied'));
+                      }).catch(() => {});
+                    }}
+                  />
+                }
+              />
             </div>
           )}
-          <div className={styles.settingsItem}>
-            <span className={styles.settingsLabel}>{t('ui.collapseToolResults')}</span>
-            <Switch
-              checked={!!collapseToolResults}
-              onChange={(checked) => onCollapseToolResultsChange && onCollapseToolResultsChange(checked)}
-            />
-          </div>
-          <div className={styles.settingsItem}>
-            <span className={styles.settingsLabel}>{t('ui.expandThinking')}</span>
-            <Switch
-              checked={!!expandThinking}
-              onChange={(checked) => onExpandThinkingChange && onExpandThinkingChange(checked)}
-            />
+          <div className={styles.settingsGroupBox}>
+            <div className={styles.settingsGroupTitle}>{t('ui.chatDisplaySwitches')}</div>
+            <div className={styles.settingsItem}>
+              <span className={styles.settingsLabel}>{t('ui.collapseToolResults')}</span>
+              <Switch
+                checked={!!collapseToolResults}
+                onChange={(checked) => onCollapseToolResultsChange && onCollapseToolResultsChange(checked)}
+              />
+            </div>
+            <div className={styles.settingsItem}>
+              <span className={styles.settingsLabel}>{t('ui.expandThinking')}</span>
+              <Switch
+                checked={!!expandThinking}
+                onChange={(checked) => onExpandThinkingChange && onExpandThinkingChange(checked)}
+              />
+            </div>
           </div>
         </Drawer>
         <Drawer

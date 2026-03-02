@@ -232,7 +232,7 @@ async function runProxyCommand(args) {
   }
 }
 
-async function runCliMode() {
+async function runCliMode(extraClaudeArgs = []) {
   const nativePath = resolveNativePath();
   if (!nativePath) {
     console.error(t('cli.cMode.notFound'));
@@ -263,7 +263,7 @@ async function runCliMode() {
 
   // 3. 启动 PTY 中的 claude
   const { spawnClaude, killPty } = await import('./pty-manager.js');
-  await spawnClaude(proxyPort, process.cwd());
+  await spawnClaude(proxyPort, process.cwd(), extraClaudeArgs);
 
   // 4. 自动打开浏览器
   const url = `http://127.0.0.1:${port}`;
@@ -291,7 +291,8 @@ const args = process.argv.slice(2);
 const isUninstall = args.includes('--uninstall');
 const isHelp = args.includes('--help') || args.includes('-h') || args[0] === 'help';
 const isVersion = args.includes('--v') || args.includes('--version') || args.includes('-v');
-const isCliMode = args.includes('--c');
+const isCliMode = args.includes('--c') || args.includes('-c');
+const isDangerousMode = args.includes('-d') || args.includes('--d');
 
 if (isHelp) {
   console.log(t('cli.help'));
@@ -308,8 +309,9 @@ if (isVersion) {
   process.exit(0);
 }
 
-if (isCliMode) {
-  runCliMode().catch(err => {
+if (isCliMode || isDangerousMode) {
+  const extraArgs = isDangerousMode ? ['--dangerously-skip-permissions'] : [];
+  runCliMode(extraArgs).catch(err => {
     console.error('CLI mode error:', err);
     process.exit(1);
   });

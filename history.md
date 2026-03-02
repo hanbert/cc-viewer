@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.7 (2026-03-03)
+
+- UI: language selector moved from AppHeader right side to CC-Viewer dropdown as submenu
+- UI: display settings button changed from custom span to Ant Design Button for consistent height
+- UI: QR code section only renders in CLI mode, with title "Scan to Code" and copy-able URL input
+- UI: settings drawer items grouped in bordered card with "Chat Display Switches" title
+- UI: settings drawer width increased from 320px to 360px
+- Feat: `ccv -c` shorthand for `ccv --c` CLI mode
+- Feat: `ccv -d` launches CLI mode with `claude --dangerously-skip-permissions`
+- i18n: added languageSettings, scanToCoding, copied, chatDisplaySwitches entries for all 18 languages
+- UI: sticky bottom button redesigned — borderless, text-over-arrow layout, semi-transparent pill background on label
+
 ## 1.4.6 (2026-03-03)
 
 - Fix: Native mode shell hook now passthrough non-API commands directly without ccv interception

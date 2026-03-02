@@ -24,7 +24,7 @@ function fixSpawnHelperPermissions() {
   } catch {}
 }
 
-export async function spawnClaude(proxyPort, cwd) {
+export async function spawnClaude(proxyPort, cwd, extraArgs = []) {
   if (ptyProcess) {
     throw new Error('PTY process already running');
   }
@@ -47,7 +47,7 @@ export async function spawnClaude(proxyPort, cwd) {
     env: { ANTHROPIC_BASE_URL: env.ANTHROPIC_BASE_URL }
   });
 
-  const args = ['--settings', settingsJson];
+  const args = ['--settings', settingsJson, ...extraArgs];
 
   lastExitCode = null;
   outputBuffer = '';

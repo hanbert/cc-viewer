@@ -135,49 +135,56 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Language selector */
-.langSelector {
-  color: #888;
-  font-size: 12px;
-  cursor: pointer;
-  user-select: none;
-  border: 1px solid #555;
-  border-radius: 4px;
-  padding: 2px 8px;
-}
-
-/* Settings button */
-.settingsBtn {
-  color: #888;
-  font-size: 12px;
-  cursor: pointer;
-  user-select: none;
-  border: 1px solid #555;
-  border-radius: 4px;
-  padding: 2px 8px;
-}
-
-.settingsBtn:hover {
-  color: #bbb;
-  border-color: #777;
-}
-
 /* QR code section */
 .qrcodeSection {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px 0 20px;
+  padding: 16px;
   margin-bottom: 12px;
-  border-bottom: 1px solid #222;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: #111;
 }
 
-.qrcodeUrl {
-  margin-top: 10px;
+.qrcodeTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e5e5e5;
+  margin-bottom: 12px;
+}
+
+.qrcodeUrlInput {
+  margin-top: 12px;
   font-size: 12px;
-  color: #888;
   font-family: Menlo, Monaco, monospace;
-  user-select: all;
+}
+
+.qrcodeUrlCopy {
+  cursor: pointer;
+  color: #888;
+  transition: color 0.2s;
+}
+
+.qrcodeUrlCopy:hover {
+  color: #3b82f6;
+}
+
+/* Settings group box */
+.settingsGroupBox {
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: #111;
+  padding: 4px 16px;
+  margin-bottom: 12px;
+}
+
+.settingsGroupTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e5e5e5;
+  padding: 12px 0 4px;
+  border-bottom: 1px solid #333;
 }
 
 /* Settings drawer items */
