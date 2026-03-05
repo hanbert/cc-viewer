@@ -14,6 +14,7 @@ import { formatTokenCount, filterRelevantRequests, findPrevMainAgentTimestamp } 
 import { isMainAgent } from './utils/contentFilter';
 import { classifyRequest } from './utils/requestType';
 import styles from './App.module.css';
+import { apiUrl } from './utils/apiUrl';
 
 class App extends React.Component {
   constructor(props) {
@@ -61,7 +62,7 @@ class App extends React.Component {
 
   componentDidMount() {
     // 获取用户偏好设置（包含 filterIrrelevant）
-    fetch('/api/preferences')
+    fetch(apiUrl('/api/preferences'))
       .then(res => res.json())
       .then(data => {
         if (data.lang) {
@@ -84,13 +85,13 @@ class App extends React.Component {
       .catch(() => { });
 
     // 获取系统用户头像和名字
-    fetch('/api/user-profile')
+    fetch(apiUrl('/api/user-profile'))
       .then(res => res.json())
       .then(data => this.setState({ userProfile: data }))
       .catch(() => { });
 
     // 获取当前监控的项目名称
-    fetch('/api/project-name')
+    fetch(apiUrl('/api/project-name'))
       .then(res => res.json())
       .then(data => this.setState({ projectName: data.projectName || '' }))
       .catch(() => { });
@@ -102,7 +103,7 @@ class App extends React.Component {
       .catch(() => { });
 
     // 检测 CLI 模式 / 工作区模式
-    fetch('/api/cli-mode')
+    fetch(apiUrl('/api/cli-mode'))
       .then(res => res.json())
       .then(data => {
         if (data.workspaceMode) {
@@ -152,7 +153,7 @@ class App extends React.Component {
   initSSE() {
     this.setState({ fileLoading: true, fileLoadingCount: 0 });
     try {
-      this.eventSource = new EventSource('/events');
+      this.eventSource = new EventSource(apiUrl('/events'));
       this.eventSource.onmessage = (event) => this.handleEventMessage(event);
       this.eventSource.addEventListener('resume_prompt', (event) => {
         try {
@@ -499,7 +500,7 @@ class App extends React.Component {
   };
 
   handleReturnToWorkspaces = () => {
-    fetch('/api/workspaces/stop', { method: 'POST' })
+    fetch(apiUrl('/api/workspaces/stop'), { method: 'POST' })
       .then(() => {
         this.setState({
           workspaceMode: true,
@@ -560,7 +561,7 @@ class App extends React.Component {
   handleLangChange = () => {
     const lang = getLang();
     this.setState({ lang });
-    fetch('/api/preferences', {
+    fetch(apiUrl('/api/preferences'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ lang }),
@@ -569,7 +570,7 @@ class App extends React.Component {
 
   handleCollapseToolResultsChange = (checked) => {
     this.setState({ collapseToolResults: checked });
-    fetch('/api/preferences', {
+    fetch(apiUrl('/api/preferences'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ collapseToolResults: checked }),
@@ -578,7 +579,7 @@ class App extends React.Component {
 
   handleExpandThinkingChange = (checked) => {
     this.setState({ expandThinking: checked });
-    fetch('/api/preferences', {
+    fetch(apiUrl('/api/preferences'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ expandThinking: checked }),
@@ -587,7 +588,7 @@ class App extends React.Component {
 
   handleExpandDiffChange = (checked) => {
     this.setState({ expandDiff: checked });
-    fetch('/api/preferences', {
+    fetch(apiUrl('/api/preferences'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ expandDiff: checked }),
@@ -603,7 +604,7 @@ class App extends React.Component {
         selectedIndex: newFiltered.length > 0 ? newFiltered.length - 1 : null,
       };
     });
-    fetch('/api/preferences', {
+    fetch(apiUrl('/api/preferences'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ filterIrrelevant: checked }),
@@ -626,7 +627,7 @@ class App extends React.Component {
 
   handleImportLocalLogs = () => {
     this.setState({ importModalVisible: true, localLogsLoading: true });
-    fetch('/api/local-logs')
+    fetch(apiUrl('/api/local-logs'))
       .then(res => res.json())
       .then(data => {
         const { _currentProject, ...logs } = data;
@@ -688,7 +689,7 @@ class App extends React.Component {
     // 按时间正序排列文件（原始列表是降序，所以反转选中的）
     const files = indices.map(i => logs[i].file).reverse();
 
-    fetch('/api/merge-logs', {
+    fetch(apiUrl('/api/merge-logs'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ files }),
@@ -714,7 +715,7 @@ class App extends React.Component {
   };
 
   handleResumeChoice = (choice) => {
-    fetch('/api/resume-choice', {
+    fetch(apiUrl('/api/resume-choice'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ choice }),

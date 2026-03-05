@@ -4,6 +4,7 @@ import { CopyOutlined, FileTextOutlined, CodeOutlined, RightOutlined, DownOutlin
 import JsonViewer from './JsonViewer';
 import ConceptHelp from './ConceptHelp';
 import { t } from '../i18n';
+import { apiUrl } from '../utils/apiUrl';
 import { formatTokenCount, stripPrivateKeys, hasClaudeMdReminder, isClaudeMdReminder, hasSkillsReminder, isSkillsReminder } from '../utils/helpers';
 import { classifyRequest } from '../utils/requestType';
 import { isMainAgent } from '../utils/contentFilter';
@@ -26,14 +27,14 @@ class DetailPanel extends React.Component {
   }
 
   componentDidMount() {
-    fetch('/api/preferences').then(r => r.json()).then(prefs => {
+    fetch(apiUrl('/api/preferences')).then(r => r.json()).then(prefs => {
       if (prefs.diffTooltipDismissed) this.setState({ diffTooltipDismissed: true });
     }).catch(() => {});
   }
 
   dismissDiffTooltip() {
     this.setState({ diffTooltipDismissed: true });
-    fetch('/api/preferences', {
+    fetch(apiUrl('/api/preferences'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ diffTooltipDismissed: true }),

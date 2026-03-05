@@ -6,6 +6,7 @@ import { formatTokenCount, computeTokenStats, computeCacheRebuildStats, computeT
 import { isSystemText, classifyUserContent, isMainAgent } from '../utils/contentFilter';
 import { classifyRequest, formatRequestTag } from '../utils/requestType';
 import { t, getLang, setLang } from '../i18n';
+import { apiUrl } from '../utils/apiUrl';
 import ConceptHelp from './ConceptHelp';
 import styles from './AppHeader.module.css';
 
@@ -43,7 +44,7 @@ class AppHeader extends React.Component {
 
   componentDidMount() {
     this.startCountdown();
-    fetch('/api/local-url').then(r => r.json()).then(data => {
+    fetch(apiUrl('/api/local-url')).then(r => r.json()).then(data => {
       if (data.url) this.setState({ localUrl: data.url });
     }).catch(() => {});
   }
@@ -509,7 +510,7 @@ class AppHeader extends React.Component {
 
   handleShowProjectStats = () => {
     this.setState({ projectStatsVisible: true, projectStatsLoading: true });
-    fetch('/api/project-stats')
+    fetch(apiUrl('/api/project-stats'))
       .then(res => {
         if (!res.ok) throw new Error('not found');
         return res.json();
@@ -519,7 +520,7 @@ class AppHeader extends React.Component {
   };
 
   fetchPlugins = () => {
-    return fetch('/api/plugins').then(r => {
+    return fetch(apiUrl('/api/plugins')).then(r => {
       if (!r.ok) throw new Error(r.status);
       return r.json();
     }).then(data => {
@@ -533,20 +534,20 @@ class AppHeader extends React.Component {
   };
 
   handleTogglePlugin = (name, enabled) => {
-    fetch('/api/preferences').then(r => r.json()).then(prefs => {
+    fetch(apiUrl('/api/preferences')).then(r => r.json()).then(prefs => {
       let disabledPlugins = Array.isArray(prefs.disabledPlugins) ? [...prefs.disabledPlugins] : [];
       if (enabled) {
         disabledPlugins = disabledPlugins.filter(n => n !== name);
       } else {
         if (!disabledPlugins.includes(name)) disabledPlugins.push(name);
       }
-      return fetch('/api/preferences', {
+      return fetch(apiUrl('/api/preferences'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ disabledPlugins }),
       });
     }).then(() => {
-      return fetch('/api/plugins/reload', { method: 'POST' });
+      return fetch(apiUrl('/api/plugins/reload'), { method: 'POST' });
     }).then(r => {
       if (!r.ok) throw new Error(r.status);
       return r.json();
@@ -563,7 +564,7 @@ class AppHeader extends React.Component {
     const { file } = this.state.deleteTarget || {};
     if (!file) return;
     this.setState({ deleteConfirmVisible: false, deleteTarget: null });
-    fetch(`/api/plugins?file=${encodeURIComponent(file)}`, { method: 'DELETE' })
+    fetch(apiUrl(`/api/plugins?file=${encodeURIComponent(file)}`), { method: 'DELETE' })
       .then(r => {
         if (!r.ok) throw new Error(r.status);
         return r.json();
@@ -576,7 +577,7 @@ class AppHeader extends React.Component {
   };
 
   handleReloadPlugins = () => {
-    fetch('/api/plugins/reload', { method: 'POST' })
+    fetch(apiUrl('/api/plugins/reload'), { method: 'POST' })
       .then(r => {
         if (!r.ok) throw new Error(r.status);
         return r.json();
@@ -610,7 +611,7 @@ class AppHeader extends React.Component {
         });
       });
       Promise.all(readPromises).then(files => {
-        return fetch('/api/plugins/upload', {
+        return fetch(apiUrl('/api/plugins/upload'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ files }),

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { t } from '../i18n';
+import { apiUrl } from '../utils/apiUrl';
 import styles from './GitChanges.module.css';
 
 const STATUS_COLORS = {
@@ -98,7 +99,7 @@ export default function GitChanges({ onClose, onFileClick }) {
   useEffect(() => {
     mounted.current = true;
     setLoading(true);
-    fetch('/api/git-status')
+    fetch(apiUrl('/api/git-status'))
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => {
         if (mounted.current) {

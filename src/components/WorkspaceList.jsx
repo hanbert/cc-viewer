@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { List, Button, Input, Empty, Typography, Space, Card, Popconfirm, message, Spin, Modal, Tag } from 'antd';
 import { FolderOpenOutlined, FolderOutlined, DeleteOutlined, PlusOutlined, RocketOutlined, ClockCircleOutlined, DatabaseOutlined, ArrowUpOutlined, BranchesOutlined } from '@ant-design/icons';
 import { t } from '../i18n';
+import { apiUrl } from '../utils/apiUrl';
 
 const { Text, Title } = Typography;
 
@@ -37,7 +38,7 @@ function DirBrowser({ open, onClose, onSelect }) {
   const browse = useCallback((path) => {
     setLoading(true);
     const url = path ? `/api/browse-dir?path=${encodeURIComponent(path)}` : '/api/browse-dir';
-    fetch(url)
+    fetch(apiUrl(url))
       .then(res => res.json())
       .then(data => {
         if (data.error) {
@@ -171,7 +172,7 @@ export default function WorkspaceList({ onLaunch }) {
   const [browseOpen, setBrowseOpen] = useState(false);
 
   const fetchWorkspaces = () => {
-    fetch('/api/workspaces')
+    fetch(apiUrl('/api/workspaces'))
       .then(res => res.json())
       .then(data => {
         setWorkspaces(data.workspaces || []);
@@ -186,7 +187,7 @@ export default function WorkspaceList({ onLaunch }) {
 
   const handleAddFromBrowser = (path) => {
     setBrowseOpen(false);
-    fetch('/api/workspaces/add', {
+    fetch(apiUrl('/api/workspaces/add'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ path }),
@@ -203,7 +204,7 @@ export default function WorkspaceList({ onLaunch }) {
   };
 
   const handleRemove = (id) => {
-    fetch(`/api/workspaces/${id}`, { method: 'DELETE' })
+    fetch(apiUrl(`/api/workspaces/${id}`), { method: 'DELETE' })
       .then(res => res.json())
       .then(() => fetchWorkspaces())
       .catch(() => {});
@@ -211,7 +212,7 @@ export default function WorkspaceList({ onLaunch }) {
 
   const handleLaunch = (workspace) => {
     setLaunching(workspace.id);
-    fetch('/api/workspaces/launch', {
+    fetch(apiUrl('/api/workspaces/launch'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ path: workspace.path }),

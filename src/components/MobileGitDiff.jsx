@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { t } from '../i18n';
+import { apiUrl } from '../utils/apiUrl';
 import FullFileDiffView from './FullFileDiffView';
 import styles from './MobileGitDiff.module.css';
 
@@ -102,7 +103,7 @@ export default function MobileGitDiff() {
   useEffect(() => {
     mounted.current = true;
     setLoading(true);
-    fetch('/api/git-status')
+    fetch(apiUrl('/api/git-status'))
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => {
         if (mounted.current) {
@@ -129,7 +130,7 @@ export default function MobileGitDiff() {
     setDiffData(null);
     setDiffError(null);
 
-    fetch(`/api/git-diff?files=${encodeURIComponent(selectedFile)}`)
+    fetch(apiUrl(`/api/git-diff?files=${encodeURIComponent(selectedFile)}`))
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();

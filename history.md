@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.21 (2026-03-06)
+
+- Fix: LAN mobile access — all API fetch and SSE EventSource requests now carry the access token, fixing 403 errors that caused empty chat view on mobile devices
+
 ## 1.4.20 (2026-03-05)
 
 - Fix: `resolveNativePath()` now excludes npm symlinks pointing to `node_modules`, correctly resolving native claude binary

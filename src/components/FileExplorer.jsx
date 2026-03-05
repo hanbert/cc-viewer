@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { t } from '../i18n';
+import { apiUrl } from '../utils/apiUrl';
 import styles from './FileExplorer.module.css';
 
 const EXT_COLORS = {
@@ -43,7 +44,7 @@ function TreeNode({ item, path, depth, onFileClick, expandedPaths, onToggleExpan
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/files?path=${encodeURIComponent(childPath)}`);
+      const res = await fetch(apiUrl(`/api/files?path=${encodeURIComponent(childPath)}`));
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
       setChildren(data);
@@ -120,7 +121,7 @@ export default function FileExplorer({ onClose, onFileClick, expandedPaths, onTo
   // 重新加载根目录
   const refreshRoot = useCallback(() => {
     if (!mounted.current) return;
-    fetch('/api/files?path=')
+    fetch(apiUrl('/api/files?path='))
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => { if (mounted.current) setItems(data); })
       .catch(() => { if (mounted.current) setError('Failed to load'); });
@@ -130,7 +131,7 @@ export default function FileExplorer({ onClose, onFileClick, expandedPaths, onTo
     mounted.current = true;
 
     // 加载根目录
-    fetch('/api/files?path=')
+    fetch(apiUrl('/api/files?path='))
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => { if (mounted.current) setItems(data); })
       .catch(() => { if (mounted.current) setError('Failed to load'); });
@@ -156,7 +157,7 @@ export default function FileExplorer({ onClose, onFileClick, expandedPaths, onTo
             // 使用防抖，避免短时间内多次刷新
             refreshTimeoutRef.current = setTimeout(() => {
               if (mounted.current) {
-                fetch('/api/files?path=')
+                fetch(apiUrl('/api/files?path='))
                   .then(r => r.ok ? r.json() : Promise.reject())
                   .then(data => { if (mounted.current) setItems(data); })
                   .catch(() => { if (mounted.current) setError('Failed to load'); });
