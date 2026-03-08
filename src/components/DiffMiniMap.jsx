@@ -9,23 +9,41 @@ import styles from './DiffMiniMap.module.css';
 export default function DiffMiniMap({ diffLines, scrollRef }) {
   const mapRef = useRef(null);
   const [visible, setVisible] = useState(false);
-  const [mapHeight, setMapHeight] = useState(0);
 
-  // 检测是否需要显示（内容是否超出一屏）+ 获取 map 高度
+  // 检测是否需要显示（内容是否超出一屏）
   useEffect(() => {
     const el = scrollRef?.current;
     if (!el) return;
+    let prevScrollHeight = 0;
+    let rafId = null;
     const check = () => {
-      const overflow = el.scrollHeight > el.clientHeight;
+      const overflow = el.scrollHeight > el.clientHeight + 1;
       setVisible(overflow);
-      if (overflow && mapRef.current) {
-        setMapHeight(mapRef.current.clientHeight);
+      prevScrollHeight = el.scrollHeight;
+    };
+    // 用 rAF 轮询检测 scrollHeight 变化，直至稳定后停止
+    // 解决首次渲染时内容尚未就绪、scrollHeight 尚未更新的时序问题
+    let stableCount = 0;
+    const poll = () => {
+      if (el.scrollHeight !== prevScrollHeight) {
+        check();
+        stableCount = 0;
+      } else {
+        stableCount++;
+      }
+      // 稳定 30 帧后停止轮询，交给 ResizeObserver
+      if (stableCount < 30) {
+        rafId = requestAnimationFrame(poll);
       }
     };
     check();
+    rafId = requestAnimationFrame(poll);
     const ro = new ResizeObserver(check);
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, [scrollRef, diffLines]);
 
   // 点击 minimap 跳转
@@ -54,15 +72,15 @@ export default function DiffMiniMap({ diffLines, scrollRef }) {
 
   return (
     <div className={styles.miniMap} ref={mapRef} onClick={handleClick}>
-      {mapHeight > 0 && markers.map((m, idx) => {
-        const top = (m.start / totalLines) * mapHeight;
-        const height = Math.max(2, ((m.end - m.start + 1) / totalLines) * mapHeight);
+      {markers.map((m, idx) => {
+        const topPct = (m.start / totalLines) * 100;
+        const heightPct = ((m.end - m.start + 1) / totalLines) * 100;
         const color = m.type === 'add' ? 'rgba(115, 201, 145, 0.7)' : 'rgba(241, 76, 76, 0.7)';
         return (
           <div
             key={idx}
             className={styles.marker}
-            style={{ top, height, backgroundColor: color }}
+            style={{ top: `${topPct}%`, height: `max(2px, ${heightPct}%)`, backgroundColor: color }}
           />
         );
       })}

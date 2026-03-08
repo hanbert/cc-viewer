@@ -26,7 +26,15 @@ function buildToolResultMap(messages) {
     if (msg.role === 'assistant' && Array.isArray(msg.content)) {
       for (const block of msg.content) {
         if (block.type === 'tool_use') {
-          toolUseMap[block.id] = block;
+          // 流式组装可能导致 input 是字符串，需要解析
+          let parsed = block;
+          if (typeof block.input === 'string') {
+            try {
+              const cleaned = block.input.replace(/^\[object Object\]/, '');
+              parsed = { ...block, input: JSON.parse(cleaned) };
+            } catch {}
+          }
+          toolUseMap[parsed.id] = parsed;
         }
       }
     }
@@ -68,7 +76,71 @@ function buildToolResultMap(messages) {
       }
     }
   }
-  return { toolUseMap, toolResultMap, readContentMap };
+  // 构建 editSnapshotMap：为每个 Edit tool_use 保存应用前的文件快照
+  // 这样每个 Edit 的 old_string 都能在对应快照中正确定位
+  const editSnapshotMap = {};
+  const _fileState = {}; // 内部追踪文件当前状态
+  for (const msg of messages) {
+    if (msg.role === 'user' && Array.isArray(msg.content)) {
+      for (const block of msg.content) {
+        if (block.type === 'tool_result') {
+          const matchedTool = toolUseMap[block.tool_use_id];
+          if (matchedTool && matchedTool.name === 'Read' && matchedTool.input?.file_path) {
+            const resultText = extractToolResultText(block);
+            const readLines = resultText.split('\n');
+            const plainLines = [];
+            const lineNums = [];
+            for (const rl of readLines) {
+              const m = rl.match(/^\s*(\d+)[\t→](.*)$/);
+              if (m) {
+                lineNums.push(parseInt(m[1], 10));
+                plainLines.push(m[2]);
+              }
+            }
+            if (plainLines.length > 0) {
+              _fileState[matchedTool.input.file_path] = { plainText: plainLines.join('\n'), lineNums };
+            }
+          }
+        }
+      }
+    } else if (msg.role === 'assistant' && Array.isArray(msg.content)) {
+      for (const block of msg.content) {
+        if (block.type === 'tool_use' && block.name === 'Edit' && block.input) {
+          const fp = block.input.file_path;
+          const oldStr = block.input.old_string;
+          const newStr = block.input.new_string;
+          if (fp && oldStr != null && newStr != null && _fileState[fp]) {
+            const entry = _fileState[fp];
+            // 保存此 Edit 应用前的快照
+            editSnapshotMap[block.id] = { plainText: entry.plainText, lineNums: entry.lineNums.slice() };
+            // 应用 Edit 更新文件状态
+            const idx = entry.plainText.indexOf(oldStr);
+            if (idx >= 0) {
+              const before = entry.plainText.substring(0, idx);
+              const lineOffset = before.split('\n').length - 1;
+              const oldLineCount = oldStr.split('\n').length;
+              const newLineCount = newStr.split('\n').length;
+              const lineDelta = newLineCount - oldLineCount;
+              entry.plainText = entry.plainText.substring(0, idx) + newStr + entry.plainText.substring(idx + oldStr.length);
+              if (lineDelta !== 0) {
+                const startNum = entry.lineNums[lineOffset] || (lineOffset + 1);
+                const newNums = [];
+                for (let i = 0; i < newLineCount; i++) {
+                  newNums.push(startNum + i);
+                }
+                entry.lineNums = [
+                  ...entry.lineNums.slice(0, lineOffset),
+                  ...newNums,
+                  ...entry.lineNums.slice(lineOffset + oldLineCount).map(n => n + lineDelta),
+                ];
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return { toolUseMap, toolResultMap, readContentMap, editSnapshotMap };
 }
 
 class ChatView extends React.Component {
@@ -320,7 +392,7 @@ class ChatView extends React.Component {
 
   renderSessionMessages(messages, keyPrefix, modelInfo, tsToIndex) {
     const { userProfile, collapseToolResults, expandThinking, onViewRequest } = this.props;
-    const { toolUseMap, toolResultMap, readContentMap } = buildToolResultMap(messages);
+    const { toolUseMap, toolResultMap, readContentMap, editSnapshotMap } = buildToolResultMap(messages);
 
     const renderedMessages = [];
 
@@ -390,11 +462,11 @@ class ChatView extends React.Component {
       } else if (msg.role === 'assistant') {
         if (Array.isArray(content)) {
           renderedMessages.push(
-            <ChatMessage key={`${keyPrefix}-asst-${mi}`} role="assistant" content={content} toolResultMap={toolResultMap} readContentMap={readContentMap} timestamp={ts} modelInfo={modelInfo} collapseToolResults={collapseToolResults} expandThinking={expandThinking} {...viewReqProps} />
+            <ChatMessage key={`${keyPrefix}-asst-${mi}`} role="assistant" content={content} toolResultMap={toolResultMap} readContentMap={readContentMap} editSnapshotMap={editSnapshotMap} timestamp={ts} modelInfo={modelInfo} collapseToolResults={collapseToolResults} expandThinking={expandThinking} {...viewReqProps} />
           );
         } else if (typeof content === 'string') {
           renderedMessages.push(
-            <ChatMessage key={`${keyPrefix}-asst-${mi}`} role="assistant" content={[{ type: 'text', text: content }]} toolResultMap={toolResultMap} readContentMap={readContentMap} timestamp={ts} modelInfo={modelInfo} collapseToolResults={collapseToolResults} expandThinking={expandThinking} {...viewReqProps} />
+            <ChatMessage key={`${keyPrefix}-asst-${mi}`} role="assistant" content={[{ type: 'text', text: content }]} toolResultMap={toolResultMap} readContentMap={readContentMap} editSnapshotMap={editSnapshotMap} timestamp={ts} modelInfo={modelInfo} collapseToolResults={collapseToolResults} expandThinking={expandThinking} {...viewReqProps} />
           );
         }
       }

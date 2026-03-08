@@ -41,6 +41,17 @@ function DiffView({ file_path, old_string, new_string, startLine = 1 }) {
   const added = diffLines.filter(l => l.type === 'add').length;
   const removed = diffLines.filter(l => l.type === 'del').length;
 
+  const maxLineNum = useMemo(() => {
+    let max = 1;
+    for (const dl of diffLines) {
+      if (dl.oldNum != null && dl.oldNum > max) max = dl.oldNum;
+      if (dl.newNum != null && dl.newNum > max) max = dl.newNum;
+    }
+    return max;
+  }, [diffLines]);
+  const digits = String(maxLineNum).length;
+  const lineNumWidth = digits * 8 + 10;
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.header}>
@@ -61,7 +72,7 @@ function DiffView({ file_path, old_string, new_string, startLine = 1 }) {
       </div>
       {!collapsed && (
         <div className={styles.tableWrap}>
-          <table className={styles.diffTable}>
+          <table className={styles.diffTable} style={{ '--line-num-w': `${lineNumWidth}px` }}>
             <tbody>
               {diffLines.map((dl, i) => {
                 const rowClass =

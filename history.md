@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.3 (2026-03-08)
+
+- Fix: Chat View Edit diff line numbers now correctly reflect file position by tracking Read results and Edit mutations via editSnapshotMap
+- Fix: Read tool result `cat -n` format parsing — separator is `→` (Unicode 8594), not tab
+- Fix: Git Diff minimap visibility race condition — use rAF polling to detect scrollHeight changes after content renders
+- Fix: Git Diff minimap markers use CSS percentage positioning instead of pixel-based mapHeight to avoid zero-height state
+- Improve: Chat View DiffView line number column width dynamically adjusts based on max line number
+
 ## 1.5.2 (2026-03-08)
 
 - Fix: ConceptHelp modal dark theme — title, text, headings, code, links and close button now use light colors on dark background for mobile readability

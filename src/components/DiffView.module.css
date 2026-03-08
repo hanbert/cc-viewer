@@ -58,9 +58,9 @@
 
 .lineNumOld,
 .lineNumNew {
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
+  width: var(--line-num-w, 40px);
+  min-width: var(--line-num-w, 40px);
+  max-width: var(--line-num-w, 40px);
   text-align: right;
   color: #484f58;
   user-select: none;
