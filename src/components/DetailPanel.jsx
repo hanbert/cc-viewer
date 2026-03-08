@@ -1,6 +1,6 @@
 import React from 'react';
-import { Tabs, Typography, Button, Tag, Empty, Space, Tooltip, Select, message } from 'antd';
-import { CopyOutlined, FileTextOutlined, CodeOutlined, RightOutlined, DownOutlined, CloseOutlined } from '@ant-design/icons';
+import { Tabs, Typography, Button, Tag, Empty, Space, Select, message } from 'antd';
+import { CopyOutlined, FileTextOutlined, CodeOutlined, RightOutlined, DownOutlined } from '@ant-design/icons';
 import JsonViewer from './JsonViewer';
 import ConceptHelp from './ConceptHelp';
 import { t } from '../i18n';
@@ -21,24 +21,8 @@ class DetailPanel extends React.Component {
       diffExpanded: false,
       requestHeadersExpanded: false,
       responseHeadersExpanded: false,
-      diffTooltipDismissed: false,
       reminderFilters: null,
     };
-  }
-
-  componentDidMount() {
-    fetch(apiUrl('/api/preferences')).then(r => r.json()).then(prefs => {
-      if (prefs.diffTooltipDismissed) this.setState({ diffTooltipDismissed: true });
-    }).catch(() => {});
-  }
-
-  dismissDiffTooltip() {
-    this.setState({ diffTooltipDismissed: true });
-    fetch(apiUrl('/api/preferences'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ diffTooltipDismissed: true }),
-    }).catch(() => {});
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -56,7 +40,6 @@ class DetailPanel extends React.Component {
       nextState.diffExpanded !== this.state.diffExpanded ||
       nextState.requestHeadersExpanded !== this.state.requestHeadersExpanded ||
       nextState.responseHeadersExpanded !== this.state.responseHeadersExpanded ||
-      nextState.diffTooltipDismissed !== this.state.diffTooltipDismissed ||
       nextState.reminderFilters !== this.state.reminderFilters
     );
   }
@@ -318,21 +301,10 @@ class DetailPanel extends React.Component {
         if (isShrunk) {
           diffBlock = (
             <div className={styles.diffSection}>
-              <Tooltip
-                title={!this.state.diffTooltipDismissed ? (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                    <span style={{ flex: 1 }}>{t('ui.diffTooltip')}</span>
-                    <CloseOutlined style={{ cursor: 'pointer', fontSize: 10, marginTop: 2, flexShrink: 0 }} onClick={(e) => { e.stopPropagation(); this.dismissDiffTooltip(); }} />
-                  </div>
-                ) : null}
-                placement="top" color="#000"
-                overlayStyle={{ maxWidth: 340 }}
-                overlayInnerStyle={{ fontSize: 12, color: '#999' }}
-              >                <Text strong className={styles.diffToggle}
-                  onClick={() => this.setState(prev => ({ diffExpanded: !prev.diffExpanded }))}>
-                  Body Diff JSON <ConceptHelp doc="BodyDiffJSON" />{' '}{this.state.diffExpanded ? <DownOutlined className={styles.diffIcon} /> : <RightOutlined className={styles.diffIcon} />}
-                </Text>
-              </Tooltip>
+              <Text strong className={styles.diffToggle}
+                onClick={() => this.setState(prev => ({ diffExpanded: !prev.diffExpanded }))}>
+                Body Diff JSON <ConceptHelp doc="BodyDiffJSON" />{' '}{this.state.diffExpanded ? <DownOutlined className={styles.diffIcon} /> : <RightOutlined className={styles.diffIcon} />}
+              </Text>
               {this.state.diffExpanded && (
                 <Text type="secondary">{t('ui.diffSessionChanged')}</Text>
               )}
@@ -344,17 +316,7 @@ class DetailPanel extends React.Component {
             this._lastDiffResult = diffResult;
             diffBlock = (
               <div className={styles.diffSection}>
-              <Tooltip
-                title={!this.state.diffTooltipDismissed ? (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                    <span style={{ flex: 1 }}>{t('ui.diffTooltip')}</span>
-                    <CloseOutlined style={{ cursor: 'pointer', fontSize: 10, marginTop: 2, flexShrink: 0 }} onClick={(e) => { e.stopPropagation(); this.dismissDiffTooltip(); }} />
-                  </div>
-                ) : null}
-                placement="top" color="#000"
-                overlayStyle={{ maxWidth: 340 }}
-                overlayInnerStyle={{ fontSize: 12, color: '#999' }}
-              >                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Text strong className={styles.diffToggle}
                     onClick={() => this.setState(prev => ({ diffExpanded: !prev.diffExpanded }))}>
                     Body Diff JSON <ConceptHelp doc="BodyDiffJSON" />{' '}{this.state.diffExpanded ? <DownOutlined className={styles.diffIcon} /> : <RightOutlined className={styles.diffIcon} />}
@@ -378,7 +340,6 @@ class DetailPanel extends React.Component {
                     </Space>
                   )}
                 </div>
-              </Tooltip>
               {this.state.diffExpanded && (
                 <>
                   {this.state.bodyViewMode.diff === 'json' ? (

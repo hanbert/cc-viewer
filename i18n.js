@@ -1378,26 +1378,6 @@ const i18nData = {
     "tr": "İstek gövdesi boyutu küçüldü, muhtemelen /clear, /compact veya oturum değişikliği nedeniyle",
     "uk": "Розмір тіла запиту зменшився, можливо через /clear, /compact або зміну сесії"
   },
-  "ui.diffTooltip": {
-    "zh": "为了避免看冗长的全文，所以为大家简化展示了 MainAgent 的增量部分，通常只有 message 增加",
-    "en": "To avoid reading lengthy full text, only the incremental parts of MainAgent are shown — typically just new messages",
-    "zh-TW": "為了避免閱讀冗長的全文，簡化展示了 MainAgent 的增量部分，通常只有 message 增加",
-    "ko": "긴 전체 텍스트를 읽지 않도록 MainAgent의 증분 부분만 간략히 표시합니다. 일반적으로 message 추가만 있습니다",
-    "ja": "MainAgent の増分部分のみを簡略表示しています。長い全文を読む手間を省くため、通常は message の追加のみです",
-    "de": "Um das Lesen langer Volltexte zu vermeiden, werden nur die inkrementellen Teile des MainAgent angezeigt — in der Regel nur neue Nachrichten",
-    "es": "Para evitar leer textos completos extensos, solo se muestran las partes incrementales del MainAgent — normalmente solo mensajes nuevos",
-    "fr": "Pour éviter de lire de longs textes complets, seules les parties incrémentales du MainAgent sont affichées — généralement uniquement les nouveaux messages",
-    "it": "Per evitare di leggere lunghi testi completi, vengono mostrate solo le parti incrementali del MainAgent — di solito solo nuovi messaggi",
-    "da": "For at undgå at læse lange fuldtekster vises kun de inkrementelle dele af MainAgent — typisk kun nye beskeder",
-    "pl": "Aby uniknąć czytania długich pełnych tekstów, wyświetlane są tylko przyrostowe części MainAgent — zwykle tylko nowe wiadomości",
-    "ru": "Чтобы не читать длинный полный текст, отображаются только инкрементальные части MainAgent — обычно только новые сообщения",
-    "ar": "لتجنب قراءة النص الكامل الطويل، يتم عرض الأجزاء التزايدية فقط من MainAgent — عادةً فقط الرسائل الجديدة",
-    "no": "For å unngå å lese lange fulltekster vises kun de inkrementelle delene av MainAgent — vanligvis bare nye meldinger",
-    "pt-BR": "Para evitar ler textos completos longos, apenas as partes incrementais do MainAgent são exibidas — geralmente apenas novas mensagens",
-    "th": "เพื่อหลีกเลี่ยงการอ่านข้อความเต็มที่ยาว จึงแสดงเฉพาะส่วนที่เพิ่มขึ้นของ MainAgent เท่านั้น — โดยปกติจะมีเพียง message ใหม่",
-    "tr": "Uzun tam metinleri okumaktan kaçınmak için yalnızca MainAgent'ın artımlı kısımları gösterilir — genellikle yalnızca yeni mesajlar",
-    "uk": "Щоб не читати довгий повний текст, відображаються лише інкрементальні частини MainAgent — зазвичай лише нові повідомлення"
-  },
   "ui.resume.title": {
     "zh": "检测到近期日志",
     "en": "Recent Log Detected",

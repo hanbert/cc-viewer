@@ -653,17 +653,39 @@ async function handleRequest(req, res) {
     }
 
     const entries = readLogFile();
+    // 增量加载：客户端传 since（最后条目时间戳）和 cc（缓存条目数）
+    const since = parsedUrl.searchParams.get('since');
+    const cc = parseInt(parsedUrl.searchParams.get('cc') || '0', 10);
+    let entriesToSend = entries;
+    let incremental = false;
+    if (since && cc > 0) {
+      const sinceMs = new Date(since).getTime();
+      if (!isNaN(sinceMs)) {
+        const delta = entries.filter(e => e.timestamp && new Date(e.timestamp).getTime() > sinceMs);
+        if (cc + delta.length === entries.length) {
+          entriesToSend = delta;
+          incremental = true;
+        }
+      }
+    }
     // 分段发送：先告知总数，再分块传输，让前端能显示真实加载进度
     const CHUNK_SIZE = 50;
-    if (entries.length > CHUNK_SIZE) {
-      res.write(`event: load_start\ndata: ${JSON.stringify({ total: entries.length })}\n\n`);
-      for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
-        const chunk = entries.slice(i, i + CHUNK_SIZE);
+    if (entriesToSend.length > CHUNK_SIZE) {
+      res.write(`event: load_start\ndata: ${JSON.stringify({ total: entriesToSend.length, incremental })}\n\n`);
+      for (let i = 0; i < entriesToSend.length; i += CHUNK_SIZE) {
+        const chunk = entriesToSend.slice(i, i + CHUNK_SIZE);
         res.write(`event: load_chunk\ndata: ${JSON.stringify(chunk)}\n\n`);
       }
       res.write(`event: load_end\ndata: {}\n\n`);
+    } else if (incremental) {
+      // 增量模式：即使条目少也走 load_start/load_end 流程（可能 0 条新数据）
+      res.write(`event: load_start\ndata: ${JSON.stringify({ total: entriesToSend.length, incremental: true })}\n\n`);
+      if (entriesToSend.length > 0) {
+        res.write(`event: load_chunk\ndata: ${JSON.stringify(entriesToSend)}\n\n`);
+      }
+      res.write(`event: load_end\ndata: {}\n\n`);
     } else {
-      res.write(`event: full_reload\ndata: ${JSON.stringify(entries)}\n\n`);
+      res.write(`event: full_reload\ndata: ${JSON.stringify(entriesToSend)}\n\n`);
     }
 
     req.on('close', () => {

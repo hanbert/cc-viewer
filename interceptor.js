@@ -202,7 +202,7 @@ export function resetWorkspace() {
   LOG_FILE = '';
 }
 
-const MAX_LOG_SIZE = 300 * 1024 * 1024; // 300MB
+const MAX_LOG_SIZE = 200 * 1024 * 1024; // 200MB
 
 const SUBAGENT_SYSTEM_RE = /command execution specialist|file search specialist|planning specialist|general-purpose agent/i;
 
@@ -589,7 +589,7 @@ export function setupInterceptor() {
       }
     } catch { }
 
-    // 用户新指令边界：检查日志文件大小，超过 300MB 则切换新文件
+    // 用户新指令边界：检查日志文件大小，超过 200MB 则切换新文件
     if (requestEntry?.mainAgent) {
       checkAndRotateLogFile();
       // 仅 mainAgent 请求时缓存模型名，避免 SubAgent 覆盖

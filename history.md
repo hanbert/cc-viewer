@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.1 (2026-03-08)
+
+- Perf: reduce JSONL log rotation threshold from 300MB to 200MB
+- Refactor: remove Body Diff JSON tooltip popup, keep diff functionality intact
+- Perf: incremental SSE loading — client sends last timestamp and cached count, server returns only new entries
+
 ## 1.5.0 (2026-03-08)
 
 - Feat: mobile IndexedDB entry cache — first load caches all entries, subsequent visits restore instantly from cache before SSE arrives
