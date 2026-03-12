@@ -13,6 +13,7 @@ function resolveLogDir() {
   const envDir = process.env.CCV_LOG_DIR;
   if (typeof envDir === 'string' && envDir.trim()) {
     const raw = envDir.trim();
+    // 允许通过 'tmp' 或 'temp' 关键字使用系统临时目录（常用于测试）
     if (raw === 'tmp' || raw === 'temp') {
       return join(tmpdir(), 'cc-viewer-test', `${process.pid}-${threadId}`);
     }
