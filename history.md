@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Improve: Context tab sidebar now supports keyboard navigation across visible items, including system prompt, history toggle, history turns, current turn, and tool entries
+- Improve: Context sidebar interactive rows now use focusable controls with visible keyboard focus styling
+- Note: auto-selecting the latest turn when `body/response` changes remains unchanged for now
+
 ## 1.5.24 (2026-03-13)
 
 - Feature: "当前项目" tag replaced with context usage health bar — shows real-time context window consumption with color transitions (green → yellow → red)
