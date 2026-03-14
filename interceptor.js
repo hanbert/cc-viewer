@@ -5,7 +5,7 @@
 const _ccvSkipArgs = ['--version', '-v', '--v', '--help', '-h', 'doctor', 'install', 'update', 'upgrade', 'auth', 'setup-token', 'agents', 'plugin', 'plugins', 'mcp'];
 const _ccvSkip = _ccvSkipArgs.includes(process.argv[2]);
 
-import './proxy-env.js';
+import './lib/proxy-env.js';
 import { appendFileSync, mkdirSync, readFileSync, statSync, renameSync, unlinkSync, existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';

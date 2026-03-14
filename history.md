@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.32 (2026-03-14)
+
+- Refactor: move proxy-errors.js and proxy-env.js into lib/ directory
+- Chore: remove stale `locales/` entry from package.json files array
+
 ## 1.5.31 (2026-03-14)
 
 - Feature: terminal toolbar with file upload button (PC only) — uploads file to server, writes quoted path to terminal/textarea

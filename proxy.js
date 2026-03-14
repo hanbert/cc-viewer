@@ -4,7 +4,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { setupInterceptor } from './interceptor.js';
-import { extractApiErrorMessage, formatProxyRequestError } from './proxy-errors.js';
+import { extractApiErrorMessage, formatProxyRequestError } from './lib/proxy-errors.js';
 
 // Setup interceptor to patch fetch
 setupInterceptor();
