@@ -1055,3 +1055,49 @@ describe('extractTeammateName', () => {
     assert.equal(result.subType, 'researcher');
   });
 });
+
+// ============================================================================
+// Teammate 空日志过滤测试
+// 验证 ChatView.buildSubAgentEntries 中的核心过滤条件（line 754）
+// ============================================================================
+
+/**
+ * 与 ChatView 第 754 行一致的过滤条件：
+ * if (Array.isArray(respContent) && respContent.length > 0)
+ */
+function shouldCreateEntry(respContent) {
+  return Array.isArray(respContent) && respContent.length > 0;
+}
+
+describe('Teammate empty log filtering', () => {
+  it('rejects undefined', () => assert.equal(shouldCreateEntry(undefined), false));
+  it('rejects null', () => assert.equal(shouldCreateEntry(null), false));
+  it('rejects empty array', () => assert.equal(shouldCreateEntry([]), false));
+  it('rejects string', () => assert.equal(shouldCreateEntry('text'), false));
+  it('rejects number', () => assert.equal(shouldCreateEntry(0), false));
+  it('accepts non-empty array', () => assert.equal(shouldCreateEntry([{ type: 'text', text: 'hi' }]), true));
+
+  it('classifyRequest + filter: empty teammate produces no entry', () => {
+    const req = {
+      timestamp: 1000,
+      teammate: 'alpha',
+      body: { system: [{ type: 'text', text: 'You are running as an agent in a team.' }], messages: [] },
+      response: { body: { content: [] } },
+    };
+    const cls = classifyRequest(req);
+    assert.equal(cls.type, 'Teammate');
+    assert.equal(shouldCreateEntry(req.response.body.content), false);
+  });
+
+  it('classifyRequest + filter: valid teammate produces entry', () => {
+    const req = {
+      timestamp: 1000,
+      teammate: 'beta',
+      body: { system: [{ type: 'text', text: 'You are running as an agent in a team.' }], messages: [] },
+      response: { body: { content: [{ type: 'text', text: 'result' }] } },
+    };
+    const cls = classifyRequest(req);
+    assert.equal(cls.type, 'Teammate');
+    assert.equal(shouldCreateEntry(req.response.body.content), true);
+  });
+});

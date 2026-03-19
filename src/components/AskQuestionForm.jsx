@@ -1,6 +1,6 @@
 import React from 'react';
 import { Checkbox, Input } from 'antd';
-import { t } from '../../i18n.js';
+import { t } from '../i18n';
 import styles from './ChatMessage.module.css';
 
 /**
@@ -21,7 +21,8 @@ export default class AskQuestionForm extends React.Component {
   }
 
   render() {
-    const { questions, onSubmit } = this.props;
+    const { questions: rawQuestions, onSubmit } = this.props;
+    const questions = Array.isArray(rawQuestions) ? rawQuestions : [];
     const { selections, multiSelections, otherActive, otherText, submitting } = this.state;
 
     const allValid = questions.every((q, qi) => {
@@ -74,16 +75,26 @@ export default class AskQuestionForm extends React.Component {
               {!isMulti ? (
                 <div className={styles.askRadioGroup}>
                   {(q.options || []).map((opt, oi) => {
-                    const isSelected = !otherActive[qi] && selectedLabel === opt.label;
+                    const isOtherOpt = /^other$/i.test(opt.label);
+                    const isSelected = isOtherOpt
+                      ? otherActive[qi]
+                      : !otherActive[qi] && selectedLabel === opt.label;
                     return (
                       <div
                         key={oi}
                         className={`${styles.askRadioItem}${isSelected ? ' ' + styles.askRadioItemSelected : ''}`}
                         onClick={() => {
-                          this.setState(prev => ({
-                            selections: { ...prev.selections, [qi]: opt.label },
-                            otherActive: { ...prev.otherActive, [qi]: false },
-                          }));
+                          if (isOtherOpt) {
+                            this.setState(prev => ({
+                              otherActive: { ...prev.otherActive, [qi]: true },
+                              selections: { ...prev.selections, [qi]: undefined },
+                            }));
+                          } else {
+                            this.setState(prev => ({
+                              selections: { ...prev.selections, [qi]: opt.label },
+                              otherActive: { ...prev.otherActive, [qi]: false },
+                            }));
+                          }
                         }}
                       >
                         <span className={styles.askRadioDot}>{isSelected ? '◉' : '○'}</span>
@@ -92,18 +103,20 @@ export default class AskQuestionForm extends React.Component {
                       </div>
                     );
                   })}
-                  <div
-                    className={`${styles.askRadioItem}${otherActive[qi] ? ' ' + styles.askRadioItemSelected : ''}`}
-                    onClick={() => {
-                      this.setState(prev => ({
-                        otherActive: { ...prev.otherActive, [qi]: true },
-                        selections: { ...prev.selections, [qi]: undefined },
-                      }));
-                    }}
-                  >
-                    <span className={styles.askRadioDot}>{otherActive[qi] ? '◉' : '○'}</span>
-                    {t('ui.askOther')}
-                  </div>
+                  {!(q.options || []).some(o => /^other$/i.test(o.label)) && (
+                    <div
+                      className={`${styles.askRadioItem}${otherActive[qi] ? ' ' + styles.askRadioItemSelected : ''}`}
+                      onClick={() => {
+                        this.setState(prev => ({
+                          otherActive: { ...prev.otherActive, [qi]: true },
+                          selections: { ...prev.selections, [qi]: undefined },
+                        }));
+                      }}
+                    >
+                      <span className={styles.askRadioDot}>{otherActive[qi] ? '◉' : '○'}</span>
+                      {t('ui.askOther')}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className={styles.askCheckboxGroup}>

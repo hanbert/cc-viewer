@@ -111,9 +111,8 @@ export function buildOtherChunks(answer, prompt) {
   const targetIdx = answer.optionIndex;
 
   chunks.push(...buildArrows(currentIdx, targetIdx));
-  chunks.push(ENTER); // Activate text input
 
-  // Type text character by character
+  // "Type something" 选项：直接输入文字，不需要 Enter 激活
   const text = answer.text || '';
   for (const ch of text) {
     chunks.push(ch);

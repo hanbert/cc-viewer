@@ -100,7 +100,7 @@ class TerminalPanel extends React.Component {
     this.terminal = new Terminal({
       cursorBlink: false,
       cursorStyle: 'bar',
-      cursorWidth: 0,
+      cursorWidth: 1,
       cursorInactiveStyle: 'none',
       fontSize: isMobile ? 11 : 13,
       fontFamily: 'Menlo, Monaco, "Courier New", monospace',

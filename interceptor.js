@@ -66,17 +66,15 @@ function resolveResumeChoice(choice) {
     } else {
       // new: 将临时文件 rename 为正式新日志文件名（空文件直接删除）
       const newPath = tempFile.replace('_temp.jsonl', '.jsonl');
-      let useNew = false;
       if (existsSync(tempFile)) {
         const sz = statSync(tempFile).size;
         if (sz > 0) {
           renameSync(tempFile, newPath);
-          useNew = true;
         } else {
           try { unlinkSync(tempFile); } catch { }
         }
       }
-      LOG_FILE = useNew ? newPath : recentFile || '';
+      LOG_FILE = newPath;
     }
   } catch (err) {
     console.error('[CC Viewer] resolveResumeChoice error:', err);

@@ -290,7 +290,7 @@ class ChatMessage extends React.Component {
 
     // AskUserQuestion: 问卷卡片
     if (tu.name === 'AskUserQuestion') {
-      const questions = inp.questions || [];
+      const questions = Array.isArray(inp.questions) ? inp.questions : [];
       const { askAnswerMap } = this.props;
       const selectedAnswers = askAnswerMap?.[tu.id] || {};
       const hasAnswers = Object.keys(selectedAnswers).length > 0;

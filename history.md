@@ -8,6 +8,12 @@
 - Fix: server skips 0-byte log files in session listing API
 - Fix: terminal cursor hidden to prevent stray blinking cursor in status bar area
 - Fix: ChatView last response rendering cleanup
+- Fix: AskQuestionForm — handle "Other" option from API natively, avoid duplicate "Other" entry; guard `questions` with `Array.isArray` check
+- Fix: AskQuestionForm import path corrected to relative `../i18n`
+- Fix: ptyChunkBuilder — remove extra Enter before typing text in "Other" input
+- Fix: TerminalPanel cursor width restored to 1 for visibility
+- Fix: resolveResumeChoice — always use new log path after rename
+- Test: add teammate empty log filtering unit tests
 
 ## 1.6.8 (2026-03-19)
 
