@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.9 (2026-03-20)
+
+- Feature: extract teammate name from SendMessage `tool_result` — `routing.sender` field provides reliable structured name, replacing fallback "X" display
+- Fix: empty temp log files no longer renamed to permanent logs — empty files are deleted instead, preventing ghost sessions in file listing
+- Fix: `migrateConversationContext` deletes empty old file after full migration instead of leaving 0-byte remnant
+- Fix: server skips 0-byte log files in session listing API
+- Fix: terminal cursor hidden to prevent stray blinking cursor in status bar area
+- Fix: ChatView last response rendering cleanup
+
 ## 1.6.8 (2026-03-19)
 
 - Perf: `buildToolResultMap` — 4-pass full scan refactored to single-pass `appendToolResultMap` with WeakMap caching; historical sessions O(1), active session processes only new messages incrementally

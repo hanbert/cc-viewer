@@ -105,8 +105,30 @@ function isPreflightRequest(req, nextReq) {
   return false;
 }
 
+function extractTeammateName(body) {
+  const msgs = body?.messages;
+  if (!Array.isArray(msgs)) return null;
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    const content = msgs[i].content;
+    if (!Array.isArray(content)) continue;
+    for (const block of content) {
+      if (block.type !== 'tool_result') continue;
+      const items = Array.isArray(block.content) ? block.content : [block];
+      for (const item of items) {
+        const text = item.text || (typeof item.content === 'string' ? item.content : '');
+        if (!text || !text.includes('"sender"')) continue;
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed?.routing?.sender) return parsed.routing.sender;
+        } catch { /* not JSON, skip */ }
+      }
+    }
+  }
+  return null;
+}
+
 function classifyRequest(req, nextReq) {
-  if (isTeammate(req)) return { type: 'Teammate', subType: req.teammate || null };
+  if (isTeammate(req)) return { type: 'Teammate', subType: req.teammate || extractTeammateName(req.body) || null };
   if (isMainAgent(req)) return { type: 'MainAgent', subType: null };
   if (req.isCountTokens || isCountRequest(req)) return { type: 'Count', subType: null };
   if (isPreflightRequest(req, nextReq)) {
@@ -894,5 +916,142 @@ describe('formatTeammateLabel', () => {
 
   it('handles 1M model descriptor', () => {
     assert.equal(formatTeammateLabel('lead', 'claude-opus-4-6[1m]'), 'Teammate: lead(opus-4-6[1m])');
+  });
+});
+
+// --------------------------------------------------------------------------
+// extractTeammateName
+// --------------------------------------------------------------------------
+describe('extractTeammateName', () => {
+  it('extracts sender from SendMessage tool_result with routing.sender', () => {
+    const body = {
+      messages: [
+        { role: 'user', content: 'hello' },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'tool_result',
+              tool_use_id: 'tu_1',
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify({
+                    status: 'sent',
+                    routing: { sender: 'worker-3', recipient: 'lead' },
+                  }),
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    assert.equal(extractTeammateName(body), 'worker-3');
+  });
+
+  it('returns null when no messages', () => {
+    assert.equal(extractTeammateName({}), null);
+    assert.equal(extractTeammateName(null), null);
+  });
+
+  it('returns null when no tool_result blocks', () => {
+    const body = {
+      messages: [{ role: 'user', content: 'hello' }],
+    };
+    assert.equal(extractTeammateName(body), null);
+  });
+
+  it('returns null when tool_result has no routing.sender', () => {
+    const body = {
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'tool_result',
+              tool_use_id: 'tu_1',
+              content: [{ type: 'text', text: '{"status":"ok"}' }],
+            },
+          ],
+        },
+      ],
+    };
+    assert.equal(extractTeammateName(body), null);
+  });
+
+  it('scans from last message first', () => {
+    const body = {
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'tool_result',
+              tool_use_id: 'tu_1',
+              content: [{ type: 'text', text: JSON.stringify({ routing: { sender: 'old-name' } }) }],
+            },
+          ],
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'tool_result',
+              tool_use_id: 'tu_2',
+              content: [{ type: 'text', text: JSON.stringify({ routing: { sender: 'new-name' } }) }],
+            },
+          ],
+        },
+      ],
+    };
+    assert.equal(extractTeammateName(body), 'new-name');
+  });
+
+  it('skips non-JSON text gracefully', () => {
+    const body = {
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'tool_result',
+              tool_use_id: 'tu_1',
+              content: [{ type: 'text', text: 'not json with "sender" in it' }],
+            },
+            {
+              type: 'tool_result',
+              tool_use_id: 'tu_2',
+              content: [{ type: 'text', text: JSON.stringify({ routing: { sender: 'worker-1' } }) }],
+            },
+          ],
+        },
+      ],
+    };
+    assert.equal(extractTeammateName(body), 'worker-1');
+  });
+
+  it('classifyRequest uses extractTeammateName for proxy-mode teammate', () => {
+    const req = {
+      body: {
+        system: [{ type: 'text', text: 'You are running as an agent in a team.' }],
+        tools: [{ name: 'SendMessage' }],
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'tool_result',
+                tool_use_id: 'tu_1',
+                content: [{ type: 'text', text: JSON.stringify({ routing: { sender: 'researcher' } }) }],
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const result = classifyRequest(req);
+    assert.equal(result.type, 'Teammate');
+    assert.equal(result.subType, 'researcher');
   });
 });

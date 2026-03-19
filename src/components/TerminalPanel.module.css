@@ -13,6 +13,11 @@
   overscroll-behavior: contain;
 }
 
+/* 隐藏 xterm textarea 的闪烁光标，避免在底部状态栏区域显示多余光标 */
+.terminalContainer :global(.xterm-helper-textarea) {
+  caret-color: transparent !important;
+}
+
 .terminalToolbar {
   height: 35px;
   flex-shrink: 0;

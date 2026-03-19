@@ -98,13 +98,16 @@ class TerminalPanel extends React.Component {
 
   initTerminal() {
     this.terminal = new Terminal({
-      cursorBlink: !isMobile,
+      cursorBlink: false,
+      cursorStyle: 'bar',
+      cursorWidth: 0,
+      cursorInactiveStyle: 'none',
       fontSize: isMobile ? 11 : 13,
       fontFamily: 'Menlo, Monaco, "Courier New", monospace',
       theme: {
         background: '#0a0a0a',
         foreground: '#d4d4d4',
-        cursor: '#d4d4d4',
+        cursor: '#0a0a0a',
         selectionBackground: '#264f78',
       },
       allowProposedApi: true,

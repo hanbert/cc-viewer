@@ -395,7 +395,9 @@ class ChatView extends React.Component {
       this._updateSuggestion();
       this._checkToolFileChanges();
     } else if (prevProps.requests !== this.props.requests) {
-      // SubAgent / Teammate 请求到达但 mainAgentSessions 未变 → 增量重建
+      // SubAgent / Teammate 请求到达但 mainAgentSessions 未变 → 重置 requests 缓存并重建
+      // 必须重置：teammate response 可能是更新已有条目（长度不变），增量扫描会跳过
+      this._reqScanCache = { tsToIndex: {}, modelName: null, subAgentEntries: [], processedCount: 0 };
       this.startRender();
     } else if (prevProps.collapseToolResults !== this.props.collapseToolResults || prevProps.expandThinking !== this.props.expandThinking) {
       const rawItems = this.buildAllItems();
@@ -818,22 +820,33 @@ class ChatView extends React.Component {
       if (si === mainAgentSessions.length - 1 && session.response?.body?.content) {
         const respContent = session.response.body.content;
         if (Array.isArray(respContent)) {
-          // Last Response 单独存储，不混入主列表
-          if (session.entryTimestamp) tsItemMap[session.entryTimestamp] = allItems.length;
-          let respLastPendingAskId = null;
-          for (const block of respContent) {
-            if (block.type === 'tool_use' && block.name === 'AskUserQuestion') {
-              respLastPendingAskId = block.id;
-            }
-          }
-          this._lastResponseItems = (
-            <React.Fragment key="last-response-group">
-              <Divider style={{ borderColor: '#2a2a2a', margin: '8px 0' }}>
-                <Text type="secondary" className={styles.lastResponseLabel}>{t('ui.lastResponse')}</Text>
-              </Divider>
-              <ChatMessage key="resp-asst" role="assistant" content={respContent} timestamp={session.entryTimestamp} modelInfo={modelInfo} collapseToolResults={collapseToolResults} expandThinking={expandThinking} toolResultMap={{}} askAnswerMap={{}} lastPendingAskId={respLastPendingAskId} cliMode={this.props.cliMode} onAskQuestionSubmit={this.handleAskQuestionSubmit} />
-            </React.Fragment>
+          // 检查是否需要隐藏 Last Response
+          const hasInteractiveBlock = respContent.some(b =>
+            b.type === 'tool_use' && (b.name === 'AskUserQuestion' || b.name === 'ExitPlanMode')
           );
+          const hasSuggestionMode = respContent.some(b =>
+            b.type === 'text' && typeof b.text === 'string' && b.text.includes('[SUGGESTION MODE:')
+          );
+          const shouldHide = hasSuggestionMode && !hasInteractiveBlock;
+
+          if (!shouldHide) {
+            // Last Response 单独存储，不混入主列表
+            if (session.entryTimestamp) tsItemMap[session.entryTimestamp] = allItems.length;
+            let respLastPendingAskId = null;
+            for (const block of respContent) {
+              if (block.type === 'tool_use' && block.name === 'AskUserQuestion') {
+                respLastPendingAskId = block.id;
+              }
+            }
+            this._lastResponseItems = (
+              <React.Fragment key="last-response-group">
+                <Divider style={{ borderColor: '#2a2a2a', margin: '8px 0' }}>
+                  <Text type="secondary" className={styles.lastResponseLabel}>{t('ui.lastResponse')}</Text>
+                </Divider>
+                <ChatMessage key="resp-asst" role="assistant" content={respContent} timestamp={session.entryTimestamp} modelInfo={modelInfo} collapseToolResults={collapseToolResults} expandThinking={expandThinking} toolResultMap={{}} askAnswerMap={{}} lastPendingAskId={respLastPendingAskId} cliMode={this.props.cliMode} onAskQuestionSubmit={this.handleAskQuestionSubmit} />
+              </React.Fragment>
+            );
+          }
         }
       }
     });

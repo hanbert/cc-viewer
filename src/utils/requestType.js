@@ -3,7 +3,7 @@
  * classifyRequest(req, nextReq?) 返回 { type, subType }
  * type: 'MainAgent' | 'SubAgent' | 'Teammate' | 'Count' | 'Preflight' | 'Plan'
  */
-import { isMainAgent, isTeammate, getSystemText } from './contentFilter';
+import { isMainAgent, isTeammate, getSystemText, extractTeammateName } from './contentFilter';
 
 function getMessageText(msg) {
   const c = msg?.content;
@@ -105,7 +105,7 @@ function isPreflightRequest(req, nextReq) {
 export function classifyRequest(req, nextReq) {
   // Teammate 子进程的请求优先识别（收敛于 contentFilter.isTeammate）
   if (isTeammate(req)) {
-    return { type: 'Teammate', subType: req.teammate || null };
+    return { type: 'Teammate', subType: req.teammate || extractTeammateName(req.body) || null };
   }
 
   if (isMainAgent(req)) {

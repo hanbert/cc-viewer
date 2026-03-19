@@ -1067,7 +1067,8 @@ class App extends React.Component {
           return (
             <Popover
               trigger={mobile ? 'click' : 'hover'}
-              placement={mobile ? 'bottomLeft' : 'rightTop'}
+              placement={mobile ? 'bottomLeft' : 'leftTop'}
+              autoAdjustOverflow={{ adjustX: false, adjustY: true }}
               overlayInnerStyle={{
                 background: '#1e1e1e',
                 border: '1px solid #3a3a3a',

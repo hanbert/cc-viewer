@@ -1396,6 +1396,7 @@ async function handleRequest(req, res) {
             const ts = match[2];
             const filePath = join(projectDir, f);
             const size = statSync(filePath).size;
+            if (size === 0) continue; // 跳过空文件
             const turns = statsFiles?.[f]?.summary?.sessionCount || 0;
             if (!grouped[project]) grouped[project] = [];
             grouped[project].push({ file: `${project}/${f}`, timestamp: ts, size, turns, preview: statsFiles?.[f]?.preview || [] });
@@ -2049,8 +2050,14 @@ async function _doStop() {
     try {
       const { tempFile } = _resumeState;
       if (existsSync(tempFile)) {
-        const newPath = tempFile.replace('_temp.jsonl', '.jsonl');
-        renameSync(tempFile, newPath);
+        // 只有非空 temp 文件才 rename 为正式文件，空文件直接删除
+        const sz = statSync(tempFile).size;
+        if (sz > 0) {
+          const newPath = tempFile.replace('_temp.jsonl', '.jsonl');
+          renameSync(tempFile, newPath);
+        } else {
+          unlinkSync(tempFile);
+        }
       }
     } catch { }
   }

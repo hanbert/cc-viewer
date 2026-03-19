@@ -172,3 +172,29 @@ export function classifyUserContent(content) {
 
   return { commands, textBlocks, skillBlocks };
 }
+
+/**
+ * 从 teammate 请求的 messages 中提取名字。
+ * 扫描 SendMessage 的 tool_result，查找 routing.sender 字段。
+ */
+export function extractTeammateName(body) {
+  const msgs = body?.messages;
+  if (!Array.isArray(msgs)) return null;
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    const content = msgs[i].content;
+    if (!Array.isArray(content)) continue;
+    for (const block of content) {
+      if (block.type !== 'tool_result') continue;
+      const items = Array.isArray(block.content) ? block.content : [block];
+      for (const item of items) {
+        const text = item.text || (typeof item.content === 'string' ? item.content : '');
+        if (!text || !text.includes('"sender"')) continue;
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed?.routing?.sender) return parsed.routing.sender;
+        } catch { /* not JSON, skip */ }
+      }
+    }
+  }
+  return null;
+}
