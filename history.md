@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.13 (2026-03-21)
+
+- Chore: bump version to 1.6.13
+
 ## 1.6.12 (2026-03-21)
 
 - Feature: header displays country flag emoji based on network IP geolocation (via ipinfo.io); hover to see city, region, org, and IP; fallback to 🇨🇳 on request failure
