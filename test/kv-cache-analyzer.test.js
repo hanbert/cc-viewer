@@ -182,7 +182,7 @@ describe('extractCachedContent', () => {
     assert.deepEqual(result.tools, []);
   });
 
-  it('extracts system content up to last block with cache_control', () => {
+  it('extracts system content: only blocks with cache_control', () => {
     const entry = makeMainAgentEntry({
       body: {
         system: [
@@ -195,7 +195,7 @@ describe('extractCachedContent', () => {
       },
     });
     const result = extractCachedContent(entry);
-    assert.deepEqual(result.system, ['You are Claude Code.', 'Second block.']);
+    assert.deepEqual(result.system, ['Second block.']);
   });
 
   it('extracts messages up to last message with cache_control', () => {

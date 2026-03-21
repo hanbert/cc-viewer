@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.14 (2026-03-21)
+
+- Fix: KV-Cache system content display now only shows blocks that have `cache_control` themselves, filtering out non-cached metadata like `x-anthropic-billing-header`
+
 ## 1.6.13 (2026-03-21)
 
 - Chore: bump version to 1.6.13

@@ -525,7 +525,7 @@ export function extractCachedContent(requests) {
     if (lastCacheIndex >= 0) {
       for (let i = 0; i <= lastCacheIndex; i++) {
         const block = body.system[i];
-        if (block.type === 'text' && block.text) {
+        if (block.type === 'text' && block.text && block.cache_control) {
           result.system.push(block.text);
         }
       }
