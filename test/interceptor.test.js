@@ -136,7 +136,7 @@ describe('interceptor', () => {
       }
     });
 
-    it('rejects when tools <= 10 without ToolSearch', () => {
+    it('rejects when tools <= 5 without ToolSearch (2 tools)', () => {
       assert.equal(isMainAgentRequest({
         system: [{ text: 'You are Claude Code' }],
         tools: [{ name: 'Edit' }, { name: 'Bash' }],
@@ -195,6 +195,26 @@ describe('interceptor', () => {
         messages: [{ role: 'user', content: '<available-deferred-tools>' }],
       };
       assert.equal(isMainAgentRequest(body), true);
+    });
+
+    it('v2.1.81+ lightweight MainAgent: 9 tools with core set', () => {
+      const body = {
+        system: [{ text: 'You are Claude Code' }],
+        tools: [
+          { name: 'Agent' }, { name: 'Bash' }, { name: 'Glob' },
+          { name: 'Grep' }, { name: 'Read' }, { name: 'Edit' },
+          { name: 'Write' }, { name: 'Skill' }, { name: 'ToolSearch' },
+        ],
+        messages: [{ role: 'user', content: 'hi' }],
+      };
+      assert.equal(isMainAgentRequest(body), true);
+    });
+
+    it('rejects when tools <= 5 without ToolSearch', () => {
+      assert.equal(isMainAgentRequest({
+        system: [{ text: 'You are Claude Code' }],
+        tools: [{ name: 'Edit' }, { name: 'Bash' }, { name: 'Agent' }],
+      }), false);
     });
 
     it('does not filter teammate requests (teammate handling is in interceptor layer)', () => {

@@ -48,7 +48,7 @@ function isMainAgent(req) {
         : Array.isArray(messages[0].content) ? messages[0].content.map(c => c.text || '').join('') : '') : '';
     if (first.includes('<available-deferred-tools>')) return true;
   }
-  if (body.tools.length > 10) {
+  if (body.tools.length > 5) {
     if (body.tools.some(t => t.name === 'Edit') && body.tools.some(t => t.name === 'Bash') && body.tools.some(t => t.name === 'Task' || t.name === 'Agent')) return true;
   }
   return false;

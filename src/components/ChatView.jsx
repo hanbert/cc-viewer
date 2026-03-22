@@ -745,6 +745,7 @@ class ChatView extends React.Component {
   buildAllItems() {
     const { mainAgentSessions, requests, collapseToolResults, expandThinking, onViewRequest } = this.props;
     this._lastResponseItems = null;
+    this._lastResponseAskQuestions = null;
     if (!mainAgentSessions || mainAgentSessions.length === 0) return [];
 
     // 增量扫描 requests（tsToIndex + modelName 增量，subAgentEntries 可按需全量重扫）
@@ -769,7 +770,15 @@ class ChatView extends React.Component {
       cache.processedCount = requests.length;
 
       // subAgentEntries: response 可能被原地更新，从 subAgentProcessedCount 开始扫描
-      const subStart = cache.subAgentProcessedCount || 0;
+      // 回退一位重扫尾项：上一轮尾项的 classifyRequest(req, undefined) 可能因缺少 nextReq 而误判
+      let subStart = cache.subAgentProcessedCount || 0;
+      if (subStart > 0 && subStart < requests.length) {
+        subStart--;
+        // 移除上一轮尾项可能已推入的错误条目
+        while (cache.subAgentEntries.length > 0 && cache.subAgentEntries[cache.subAgentEntries.length - 1].requestIndex >= subStart) {
+          cache.subAgentEntries.pop();
+        }
+      }
       for (let i = subStart; i < requests.length; i++) {
         const req = requests[i];
         if (!req.timestamp) continue;
@@ -861,6 +870,18 @@ class ChatView extends React.Component {
             for (const block of respContent) {
               if (block.type === 'tool_use' && block.name === 'AskUserQuestion') {
                 respLastPendingAskId = block.id;
+              }
+            }
+            // 收集 Last Response 中所有 AskUserQuestion 的问题文本，用于 prompt 去重
+            this._lastResponseAskQuestions = new Set();
+            for (const block of respContent) {
+              if (block.type === 'tool_use' && block.name === 'AskUserQuestion') {
+                const questions = block.input?.questions;
+                if (Array.isArray(questions)) {
+                  for (const q of questions) {
+                    if (q.question) this._lastResponseAskQuestions.add(q.question);
+                  }
+                }
               }
             }
             this._lastResponseItems = (
@@ -1574,7 +1595,14 @@ class ChatView extends React.Component {
       </button>
     ) : null;
 
-    const promptBubbles = cliMode && ptyPromptHistory.length > 0 ? ptyPromptHistory.filter(p => !(isPlanApprovalPrompt(p) && p.status === 'active')).map((p, i) => {
+    const promptBubbles = cliMode && ptyPromptHistory.length > 0 ? ptyPromptHistory.filter(p => {
+      // active plan approval prompt 由 ExitPlanMode 卡片处理，不重复显示
+      if (isPlanApprovalPrompt(p) && p.status === 'active') return false;
+      // Last Response 中有对应 AskUserQuestion 卡片时，按问题文本精确去重
+      if (this._lastResponseAskQuestions && this._lastResponseAskQuestions.size > 0
+        && p.status === 'active' && this._lastResponseAskQuestions.has(p.question)) return false;
+      return true;
+    }).map((p, i) => {
       const isActive = p.status === 'active';
       const isAnswered = p.status === 'answered';
       return (

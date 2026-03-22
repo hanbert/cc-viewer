@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.15 (2026-03-22)
+
+- Fix: MainAgent detection threshold lowered from >10 to >5 tools, compatible with v2.1.81+ lightweight MainAgent
+- Fix: SubAgent incremental scan rewinds one entry to avoid misclassification when nextReq is missing
+- Fix: AskUserQuestion prompt deduplication — active prompts matching Last Response question text are no longer displayed twice
+
 ## 1.6.14 (2026-03-21)
 
 - Fix: KV-Cache system content display now only shows blocks that have `cache_control` themselves, filtering out non-cached metadata like `x-anthropic-billing-header`

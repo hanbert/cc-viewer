@@ -98,8 +98,8 @@ function _isMainAgentImpl(req) {
     }
   }
 
-  // 旧架构检测：工具数量 > 10 且包含核心工具
-  if (body.tools.length > 10) {
+  // v2.1.81+: 轻量 MainAgent 初始请求工具数可能 < 10，降低阈值兼容
+  if (body.tools.length > 5) {
     const hasEdit = body.tools.some(t => t.name === 'Edit');
     const hasBash = body.tools.some(t => t.name === 'Bash');
     const hasTaskOrAgent = body.tools.some(t => t.name === 'Task' || t.name === 'Agent');
