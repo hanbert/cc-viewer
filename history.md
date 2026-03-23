@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.22 (2026-03-23)
+
+- Feature: native teammate detection — Agent tool sub-agents now display as "Teammate" instead of "SubAgent", with automatic name extraction from hook context and message content
+- Fix: request list scroll position preserved when new requests arrive — no longer jumps to selected item on data update
+
 ## 1.6.21 (2026-03-23)
 
 - Fix: user avatar fallback — when macOS system avatar is missing or broken, automatically falls back to default avatar instead of rendering a broken image
