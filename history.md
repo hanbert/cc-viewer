@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.23 (2026-03-23)
+
+- Feature: clipboard image paste in terminal — paste images directly from clipboard when terminal is focused, auto-uploads and inserts file path
+- Feature: Retina image downscale — clipboard images on HiDPI displays (devicePixelRatio > 1) are downscaled to 1x before upload to reduce file size
+- Feature: upload failure toast — shows antd message.error with localized text when clipboard image upload fails
+
 ## 1.6.22 (2026-03-23)
 
 - Feature: native teammate detection — Agent tool sub-agents now display as "Teammate" instead of "SubAgent", with automatic name extraction from hook context and message content

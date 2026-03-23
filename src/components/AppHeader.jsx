@@ -1,5 +1,5 @@
 import React from 'react';
-import { Space, Tag, Button, Dropdown, Popover, Modal, Collapse, Drawer, Switch, Radio, Tabs, Spin, Input, Table, message } from 'antd';
+import { Space, Tag, Button, Dropdown, Popover, Modal, Collapse, Drawer, Switch, Radio, Tabs, Spin, Input, Table, Select, message } from 'antd';
 import { MessageOutlined, FileTextOutlined, ImportOutlined, DashboardOutlined, ExportOutlined, DownloadOutlined, SettingOutlined, BarChartOutlined, CodeOutlined, GlobalOutlined, CopyOutlined, ApiOutlined, DeleteOutlined, ReloadOutlined, PlusOutlined, CloudDownloadOutlined } from '@ant-design/icons';
 import { QRCodeCanvas } from 'qrcode.react';
 import { formatTokenCount, computeTokenStats, computeCacheRebuildStats, computeToolUsageStats, computeSkillUsageStats, getModelMaxTokens, extractCachedContent } from '../utils/helpers';
@@ -8,6 +8,8 @@ import { classifyRequest } from '../utils/requestType';
 import { t, getLang, setLang } from '../i18n';
 import { apiUrl } from '../utils/apiUrl';
 import ConceptHelp from './ConceptHelp';
+import appConfig from '../config.json';
+const CALIBRATION_MODELS = appConfig.calibrationModels;
 import styles from './AppHeader.module.css';
 
 const LANG_OPTIONS = [
@@ -41,7 +43,7 @@ const countryToFlag = (code) => {
 class AppHeader extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { countdownText: '', countryFlag: null, countryInfo: null, promptModalVisible: false, promptData: [], promptViewMode: 'original', settingsDrawerVisible: false, globalSettingsVisible: false, projectStatsVisible: false, projectStats: null, projectStatsLoading: false, localUrl: '', pluginModalVisible: false, pluginsList: [], pluginsDir: '', deleteConfirmVisible: false, deleteTarget: null, processModalVisible: false, processList: [], processLoading: false, logoDropdownOpen: false, cacheHighlightIdx: null, cacheHighlightFading: false, cdnModalVisible: false, cdnUrl: '', cdnLoading: false };
+    this.state = { countdownText: '', countryFlag: null, countryInfo: null, promptModalVisible: false, promptData: [], promptViewMode: 'original', settingsDrawerVisible: false, globalSettingsVisible: false, projectStatsVisible: false, projectStats: null, projectStatsLoading: false, localUrl: '', pluginModalVisible: false, pluginsList: [], pluginsDir: '', deleteConfirmVisible: false, deleteTarget: null, processModalVisible: false, processList: [], processLoading: false, logoDropdownOpen: false, cacheHighlightIdx: null, cacheHighlightFading: false, cdnModalVisible: false, cdnUrl: '', cdnLoading: false, calibrationModel: localStorage.getItem('ccv_calibrationModel') || 'auto' };
     this._rafId = null;
     this._expiredTimer = null;
     this.updateCountdown = this.updateCountdown.bind(this);
@@ -475,6 +477,11 @@ class AppHeader extends React.Component {
     target.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
+  handleCalibrationModelChange = (value) => {
+    this.setState({ calibrationModel: value });
+    localStorage.setItem('ccv_calibrationModel', value);
+  };
+
   renderCacheContentPopover(contextPercent) {
     const { requests = [], serverCachedContent } = this.props;
     const cached = serverCachedContent || extractCachedContent(requests);
@@ -583,6 +590,15 @@ class AppHeader extends React.Component {
                   message.success(t('ui.copied'));
                 }).catch(() => {});
               }}
+            />
+            <span style={{ marginLeft: 'auto', color: '#888', fontSize: 12, whiteSpace: 'nowrap' }}>{t('ui.calibrationModelLabel')}</span>
+            <Select
+              size="small"
+              value={this.state.calibrationModel}
+              onChange={this.handleCalibrationModelChange}
+              options={CALIBRATION_MODELS}
+              style={{ width: 160, flexShrink: 0 }}
+              popupMatchSelectWidth={false}
             />
           </div>
         </div>
@@ -1247,8 +1263,31 @@ class AppHeader extends React.Component {
             // auto-compact 在 ~83.5% 时触发（扣除 16.5% buffer）
             // 将 used_percentage 映射到 0~83.5% → 0~100%
             let contextPercent = 0;
+            const calibration = CALIBRATION_MODELS.find(m => m.value === this.state.calibrationModel);
+            const calibrationTokens = calibration?.tokens; // undefined for 'auto'
             if (!isLocalLog) {
-              if (contextWindow?.used_percentage != null) {
+              if (calibrationTokens && contextWindow?.used_percentage != null) {
+                // 校准模式 + 精确数据：用实际 token 数重新计算百分比
+                const getTotal = (req) => {
+                  const u = req.response?.body?.usage;
+                  return (u?.input_tokens || 0) + (u?.cache_creation_input_tokens || 0) + (u?.cache_read_input_tokens || 0);
+                };
+                let total = 0;
+                for (let i = requests.length - 1; i >= 0; i--) {
+                  if (isMainAgent(requests[i]) && requests[i].response?.body?.usage) {
+                    total = getTotal(requests[i]);
+                    break;
+                  }
+                }
+                if (total > 0) {
+                  const usable = calibrationTokens * 0.835;
+                  contextPercent = Math.min(100, Math.max(0, Math.round(total / usable * 100)));
+                } else {
+                  // 无 token 数据时，按比例缩放 used_percentage
+                  const origMax = contextWindow.context_window_size || 200000;
+                  contextPercent = Math.min(100, Math.max(0, Math.round(contextWindow.used_percentage * origMax / calibrationTokens / 83.5 * 100)));
+                }
+              } else if (contextWindow?.used_percentage != null) {
                 // 精确模式：statusLine 推送的 used_percentage
                 contextPercent = Math.min(100, Math.max(0, Math.round(contextWindow.used_percentage / 83.5 * 100)));
               } else if (requests.length > 0) {
@@ -1260,7 +1299,7 @@ class AppHeader extends React.Component {
                 for (let i = requests.length - 1; i >= 0; i--) {
                   if (isMainAgent(requests[i]) && requests[i].response?.body?.usage) {
                     const total = getTotal(requests[i]);
-                    const maxTokens = contextWindow?.context_window_size || getModelMaxTokens(requests[i].body?.model);
+                    const maxTokens = calibrationTokens || contextWindow?.context_window_size || getModelMaxTokens(requests[i].body?.model);
                     const usable = maxTokens * 0.835;
                     if (usable > 0 && total > 0) {
                       contextPercent = Math.min(100, Math.max(0, Math.round(total / usable * 100)));

@@ -1,4 +1,5 @@
 import React from 'react';
+import { message } from 'antd';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebglAddon } from '@xterm/addon-webgl';
@@ -489,6 +490,20 @@ class TerminalPanel extends React.Component {
   }
 
   _handlePaste = (e) => {
+    // 检查剪贴板中是否包含图片，如有则上传并将路径插入终端
+    const items = e.clipboardData?.items;
+    if (items) {
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          e.stopPropagation();
+          const file = item.getAsFile();
+          if (file) this._uploadClipboardImage(file);
+          return;
+        }
+      }
+    }
+
     // 当 shell 已启用 bracketedPasteMode 时，xterm.js 会自动包裹，无需干预
     if (this.terminal?.modes?.bracketedPasteMode) return;
     const text = e.clipboardData?.getData('text');
@@ -501,6 +516,49 @@ class TerminalPanel extends React.Component {
       this.ws.send(JSON.stringify({ type: 'input', data: wrapped }));
     }
   };
+
+  _uploadClipboardImage = async (file) => {
+    try {
+      const optimized = await this._downscaleForRetina(file);
+      const path = await uploadFileAndGetPath(optimized);
+      if (this.props.onFilePath) this.props.onFilePath(path);
+      if (this.terminal) this.terminal.focus();
+    } catch (err) {
+      console.error('[CC Viewer] Clipboard image upload failed:', err);
+      message.error(t('ui.terminal.pasteImageFailed'));
+    }
+  };
+
+  /**
+   * Retina 屏幕截图为 2x 分辨率，上传前按 devicePixelRatio 缩小到 1x，
+   * 减少文件体积。非 Retina 屏幕或 Canvas 不可用时返回原始文件。
+   */
+  _downscaleForRetina(file) {
+    const dpr = window.devicePixelRatio || 1;
+    if (dpr <= 1) return Promise.resolve(file);
+
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const w = Math.round(img.width / dpr);
+        const h = Math.round(img.height / dpr);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { resolve(file); return; }
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob((blob) => {
+          if (!blob) { resolve(file); return; }
+          resolve(new File([blob], file.name || 'clipboard.png', { type: file.type }));
+        }, file.type);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  }
 
   handleVirtualKey = (seq) => {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {

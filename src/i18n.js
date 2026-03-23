@@ -3967,6 +3967,26 @@ const i18nData = {
     "tr": "Ultrathink",
     "uk": "Ultrathink"
   },
+  "ui.terminal.pasteImageFailed": {
+    "zh": "粘贴图片上传失败",
+    "en": "Failed to upload pasted image",
+    "zh-TW": "貼上圖片上傳失敗",
+    "ko": "붙여넣은 이미지 업로드 실패",
+    "ja": "貼り付けた画像のアップロードに失敗しました",
+    "de": "Hochladen des eingefügten Bildes fehlgeschlagen",
+    "es": "Error al subir la imagen pegada",
+    "fr": "Échec du téléchargement de l'image collée",
+    "it": "Caricamento immagine incollata non riuscito",
+    "da": "Upload af indsat billede mislykkedes",
+    "pl": "Nie udało się przesłać wklejonego obrazu",
+    "ru": "Не удалось загрузить вставленное изображение",
+    "ar": "فشل رفع الصورة الملصقة",
+    "no": "Kunne ikke laste opp limt bilde",
+    "pt-BR": "Falha ao enviar imagem colada",
+    "th": "อัปโหลดรูปภาพที่วางไม่สำเร็จ",
+    "tr": "Yapıştırılan resim yüklenemedi",
+    "uk": "Не вдалося завантажити вставлене зображення"
+  },
   "ui.terminal.upload": {
     "zh": "上传文件",
     "en": "Upload File",
@@ -4086,6 +4106,26 @@ const i18nData = {
     "th": "พิมพ์คำตอบของคุณ...",
     "tr": "Cevabınızı yazın...",
     "uk": "Введіть вашу відповідь..."
+  },
+  "ui.calibrationModelLabel": {
+    "zh": "手动校准主力模型:",
+    "en": "Calibrate model:",
+    "zh-TW": "手動校準主力模型:",
+    "ko": "모델 수동 보정:",
+    "ja": "モデル手動校正:",
+    "de": "Modell kalibrieren:",
+    "es": "Calibrar modelo:",
+    "fr": "Calibrer le modèle :",
+    "it": "Calibra modello:",
+    "da": "Kalibrer model:",
+    "pl": "Kalibruj model:",
+    "ru": "Калибровка модели:",
+    "ar": "معايرة النموذج:",
+    "no": "Kalibrer modell:",
+    "pt-BR": "Calibrar modelo:",
+    "th": "ปรับเทียบโมเดล:",
+    "tr": "Model kalibrasyonu:",
+    "uk": "Калібрування моделі:"
   },
   "ui.cachedContentTitle": {
     "zh": "当前 KV-Cache 缓存内容",
