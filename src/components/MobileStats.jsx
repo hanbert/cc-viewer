@@ -26,27 +26,19 @@ export default function MobileStats({ requests = [], visible, onClose }) {
     const hasCacheStats = activeReasons.length > 0;
 
     const subAgentCounts = {};
+    const teammateCounts = {};
     for (let i = 0; i < requests.length; i++) {
       const cls = classifyRequest(requests[i], requests[i + 1]);
       if (cls.type === 'SubAgent') {
         const label = cls.subType || 'Other';
         subAgentCounts[label] = (subAgentCounts[label] || 0) + 1;
       } else if (cls.type === 'Teammate') {
-        const label = cls.subType ? `Teammate:${cls.subType}` : 'Teammate';
-        subAgentCounts[label] = (subAgentCounts[label] || 0) + 1;
-      }
-    }
-    const subAgentEntries = Object.entries(subAgentCounts).sort((a, b) => b[1] - a[1]);
-    const hasSubAgentStats = subAgentEntries.length > 0;
-
-    const teammateCounts = {};
-    for (let i = 0; i < requests.length; i++) {
-      const cls = classifyRequest(requests[i], requests[i + 1]);
-      if (cls.type === 'Teammate') {
         const label = cls.subType || 'Teammate';
         teammateCounts[label] = (teammateCounts[label] || 0) + 1;
       }
     }
+    const subAgentEntries = Object.entries(subAgentCounts).sort((a, b) => b[1] - a[1]);
+    const hasSubAgentStats = subAgentEntries.length > 0;
     const teammateEntries = Object.entries(teammateCounts).sort((a, b) => b[1] - a[1]);
     const hasTeammateStats = teammateEntries.length > 0;
 
