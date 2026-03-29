@@ -6,6 +6,12 @@
  */
 export const BUILTIN_PRESETS = [
   {
+    builtinId: 'scout-regiment',
+    version: 1,
+    teamName: 'ui.preset.scoutRegiment.name',
+    description: 'ui.preset.scoutRegiment.desc',
+  },
+  {
     builtinId: 'codereview-5',
     version: 1,
     teamName: 'ui.preset.codeReview5.name',

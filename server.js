@@ -1906,7 +1906,21 @@ async function setupTerminalWebSocket(httpServer) {
                 }
               }
             }
-            writeToPty(msg.data);
+            // 拦截连续 Ctrl+C：2秒内连按2次则阻止并提醒，避免误退出 CLI
+            if (msg.data === '\x03') {
+              const now = Date.now();
+              if (!ws._ctrlCLastTime) ws._ctrlCLastTime = 0;
+              if (now - ws._ctrlCLastTime < 2000) {
+                ws._ctrlCLastTime = 0;
+                try { ws.send(JSON.stringify({ type: 'toast', message: t('ui.terminal.ctrlCBlocked') })); } catch {}
+                // 不发送第二次 Ctrl+C 到 PTY
+              } else {
+                ws._ctrlCLastTime = now;
+                writeToPty(msg.data);
+              }
+            } else {
+              writeToPty(msg.data);
+            }
           } else if (msg.type === 'input-sequential') {
             // Programmatic sequential input: send chunks one by one, waiting for PTY ACK
             const state = getPtyState();

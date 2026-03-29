@@ -24,18 +24,6 @@ const VIRTUAL_KEYS = [
   { label: 'Ctrl+C', seq: '\x03' },
 ];
 
-function UltrathinkIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.3 4.5-3 5.7V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.3C6.3 13.5 5 11.5 5 9a7 7 0 0 1 7-7z" />
-      <line x1="9" y1="21" x2="15" y2="21" />
-      <line x1="10" y1="24" x2="14" y2="24" />
-      <line x1="12" y1="6" x2="12" y2="12" />
-      <line x1="9" y1="9" x2="15" y2="9" />
-    </svg>
-  );
-}
-
 function UploadIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -390,6 +378,9 @@ class TerminalPanel extends React.Component {
             this.terminal.write(`\x1b[33m${t('ui.terminal.exited', { code: msg.exitCode })}\x1b[0m\r\n`);
             this.terminal.write(`\x1b[90m${t('ui.terminal.pressEnterForShell')}\x1b[0m\r\n`);
           }
+        } else if (msg.type === 'toast') {
+          this._flushWrite();
+          this.terminal.write(`\r\n\x1b[33m⚠ ${msg.message}\x1b[0m\r\n`);
         }
       } catch {}
     };
@@ -790,7 +781,8 @@ class TerminalPanel extends React.Component {
     if (!description) return;
     this.setState({ agentTeamPopoverOpen: false });
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify({ type: 'input', data: description }));
+      // 用 bracket paste mode 包裹，让终端识别为一次粘贴，可整体删除
+      this.ws.send(JSON.stringify({ type: 'input', data: `\x1b[200~${description}\x1b[201~` }));
     }
     if (!isMobile && this.terminal) this.terminal.focus();
   };
@@ -806,13 +798,6 @@ class TerminalPanel extends React.Component {
     if (!isMobile && this.terminal) this.terminal.focus();
   };
 
-  handleUltrathink = () => {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify({ type: 'input', data: 'ultrathink ' }));
-    }
-    if (this.terminal) this.terminal.focus();
-  };
-
   render() {
     return (
       <div className={styles.terminalPanel}>
@@ -823,10 +808,6 @@ class TerminalPanel extends React.Component {
             <button className={styles.toolbarBtn} onClick={() => this.fileInputRef.current?.click()} title={t('ui.terminal.upload')}>
               <UploadIcon />
               <span>{t('ui.terminal.upload')}</span>
-            </button>
-            <button className={styles.toolbarBtn} onClick={this.handleUltrathink} title={t('ui.terminal.ultrathink')}>
-              <UltrathinkIcon />
-              <span>{t('ui.terminal.ultrathink')}</span>
             </button>
             {this.state.agentTeamEnabled ? (
               <Popover

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.59 (2026-03-29)
+
+- Feature: auto-inject AskUserQuestion PreToolUse hook into `~/.claude/settings.json` on CLI startup (`ensureAskHook`)
+- Feature: intercept consecutive Ctrl+C in web terminal — block second press within 2s and show i18n toast reminder
+- Feature: preset send uses bracket paste mode (`ESC[200~...ESC[201~`) for single-block paste/delete UX
+- Feature: add "Scout Regiment" (调查兵团) as built-in Agent Team preset with 18 language translations
+- Refactor: update Code Reviewer / Code Reviewer Pro preset descriptions to semicolon+newline format (all 18 languages)
+- Remove: ultrathink button and i18n key from TerminalPanel toolbar
+- Fix: ensureAskHook skips write on malformed settings.json to avoid overwriting user config
+
 ## 1.6.58 (2026-03-29)
 
 - Fix: React hooks order violation in TeamModal — move early return after all hooks to prevent "Rendered more hooks than during the previous render" error (#310)

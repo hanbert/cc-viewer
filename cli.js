@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync, writeFileSync, existsSync, realpathSync, unlinkSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, realpathSync, unlinkSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
@@ -256,6 +256,41 @@ async function runProxyCommand(args) {
   }
 }
 
+function ensureAskHook() {
+  try {
+    const claudeDir = resolve(homedir(), '.claude');
+    const settingsPath = resolve(claudeDir, 'settings.json');
+    let settings = {};
+    try { if (existsSync(settingsPath)) settings = JSON.parse(readFileSync(settingsPath, 'utf-8')); } catch {
+      console.warn('[CC Viewer] ~/.claude/settings.json is malformed, skipping hook injection');
+      return;
+    }
+
+    const askBridgePath = resolve(__dirname, 'lib', 'ask-bridge.js');
+    const expectedCmd = `node "${askBridgePath}"`;
+
+    if (!settings.hooks) settings.hooks = {};
+    if (!Array.isArray(settings.hooks.PreToolUse)) settings.hooks.PreToolUse = [];
+
+    const existing = settings.hooks.PreToolUse.find(h => h.matcher === 'AskUserQuestion');
+    if (existing) {
+      const cmd = existing.hooks?.[0]?.command || '';
+      if (cmd === expectedCmd) return;
+      existing.hooks = [{ type: 'command', command: expectedCmd }];
+    } else {
+      settings.hooks.PreToolUse.push({
+        matcher: 'AskUserQuestion',
+        hooks: [{ type: 'command', command: expectedCmd }]
+      });
+    }
+
+    mkdirSync(claudeDir, { recursive: true });
+    writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+  } catch (err) {
+    console.warn('[CC Viewer] Failed to ensure AskUserQuestion hook:', err.message);
+  }
+}
+
 async function runCliMode(extraClaudeArgs = [], cwd) {
   // 首先尝试 npm 版本（包括 nvm 安装），找不到再尝试 native 版本
   let claudePath = resolveNpmClaudePath();
@@ -277,6 +312,9 @@ async function runCliMode(extraClaudeArgs = [], cwd) {
   // 注册工作区
   const { registerWorkspace } = await import('./workspace-registry.js');
   registerWorkspace(workingDir);
+
+  // 确保 AskUserQuestion hook 已注册到 ~/.claude/settings.json
+  ensureAskHook();
 
   // 2. 设置 CLI 模式标记（必须在 import proxy.js 之前，
   //    因为 proxy.js → interceptor.js 可能触发 server.js 加载，
