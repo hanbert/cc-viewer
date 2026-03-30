@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.72 (2026-03-30)
+
+- Fix: Mermaid SVG text invisible — DOMPurify sanitize config now uses `svg` profile with `style`/`foreignObject` tags allowed
+
 ## 1.6.71 (2026-03-30)
 
 - Feature: Mermaid diagram rendering in markdown — `\`\`\`mermaid` code blocks auto-rendered as SVG charts

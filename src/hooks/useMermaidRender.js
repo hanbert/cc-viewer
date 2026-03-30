@@ -60,7 +60,10 @@ async function renderMermaidIn(container) {
       const { svg } = await m.render(id, src);
       const wrapper = document.createElement('div');
       wrapper.className = 'mermaid-diagram';
-      wrapper.innerHTML = DOMPurify.sanitize(svg);
+      wrapper.innerHTML = DOMPurify.sanitize(svg, {
+        USE_PROFILES: { svg: true, svgFilters: true },
+        ADD_TAGS: ['style', 'foreignObject'],
+      });
       pre.replaceWith(wrapper);
     } catch {
       // render failed — keep original <pre> code block visible
